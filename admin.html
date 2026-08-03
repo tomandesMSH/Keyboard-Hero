@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keyboard Hero - Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --primary-red: #ff3b30;
+      --primary-green: #2ecc71;
+      --primary-blue: #3498db;
+      --text-color: #2c3e50;
+      --border-color: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 950px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    h1 { font-size: 1.8rem; color: var(--primary-blue); }
+    .btn-logout { background: var(--primary-red); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    
+    .auth-card { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 400px; margin: 50px auto; border: 1px solid var(--border-color); }
+    .auth-card h2 { margin-bottom: 20px; text-align: center; }
+    .auth-input { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
+    .btn-primary { width: 100%; padding: 10px; background: var(--primary-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-primary-false { width: 100%; padding: 10px; background: var(--primary-green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    
+    .table-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
+    th { background-color: #f1f5f9; color: #475569; }
+    
+    .counter-control { display: flex; align-items: center; gap: 6px; }
+    .btn-step { width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-color); background: #e2e8f0; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+    .btn-step:hover { background: #cbd5e1; }
+    .input-val { width: 45px; text-align: center; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; }
+    
+    .btn-save { background: var(--primary-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-audio { background: #8e44ad; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+    .btn-delete { background: var(--primary-red); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-left: 8px; }
+
+    /* Panel nahrávek a komentářů */
+    .recordings-box { background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 8px; border: 1px solid #cbd5e1; }
+    .recording-item { padding: 10px 0; border-bottom: 1px dashed #cbd5e1; }
+    .recording-item:last-child { border-bottom: none; }
+    .recording-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .recording-date { font-size: 0.85rem; color: #64748b; font-weight: bold; }
+    
+    .comment-box { display: flex; gap: 8px; margin-top: 8px; }
+    .comment-input { flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem; }
+    .btn-comment { background: var(--primary-blue); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div id="admin-login" class="auth-card">
+      <h2>Přihlášení Administrátora</h2>
+      <label style="font-size: 0.85rem; color: #666;">Uživatelské jméno:</label>
+      <input type="text" id="admin-username" class="auth-input" placeholder="Administrátor">
+      
+      <label style="font-size: 0.85rem; color: #666;">Heslo:</label>
+      <input type="password" id="admin-password" class="auth-input" placeholder="Heslo">
+
+      <button class="btn-primary" onclick="loginAdmin()">Přihlásit se jako Administrátor</button>
+    <pre>
+    </pre>
+      <button class="btn-primary-false" onclick="window.location.href='index.html'">
+    Přihlásit se jako student
+</button>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+      <header>
+        <h1>Keyboard Hero - Admin</h1>
+        <button class="btn-logout" onclick="logoutAdmin()">Odhlásit se</button>
+      </header>
+
+      <div class="table-card">
+        <h2 style="margin-bottom: 15px;">Přehled žáků</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Uživatel</th>
+              <th>Jméno</th>
+              <th>🔥 Streak</th>
+              <th>⭐ Koncert</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="students-table-body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
+
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function makeInternalEmail(username) {
+      const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+      return `${cleanUsername}@keyboardhero.internal`;
+    }
+
+    async function loginAdmin() {
+      const username = document.getElementById('admin-username').value;
+      const password = document.getElementById('admin-password').value;
+
+      if (!username || !password) return alert('Vyplň jméno i heslo!');
+
+      const email = makeInternalEmail(username);
+      try {
+        const { data, error } = await db.auth.signInWithPassword({ email, password });
+        if (error) alert('Chyba přihlášení: ' + error.message);
+        else checkAdminRole(data.user.id);
+      } catch (err) { alert('Chyba: ' + err.message); }
+    }
+
+    async function checkAdminRole(userId) {
+      const { data: profile } = await db.from('profiles').select('*').eq('id', userId).single();
+      if (profile && profile.role === 'admin') {
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        loadStudents();
+      } else {
+        alert('Uživatel nemá administrátorská práva!');
+        await db.auth.signOut();
+      }
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) checkAdminRole(session.user.id);
+    }
+
+    async function loadStudents() {
+      const tbody = document.getElementById('students-table-body');
+      tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
+
+      const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student');
+
+      if (error || !students || students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">Žádní žáci nebyli nalezeni.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      students.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${student.username || '—'}</code></td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', -1)">-</button>
+              <input type="number" id="streak-${student.id}" class="input-val" value="${student.streak || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', 1)">+</button>
+            </div>
+          </td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', -1)">-</button>
+              <input type="number" id="stars-${student.id}" class="input-val" value="${student.stars || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
+            </div>
+          </td>
+          <td>
+            <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
+            <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
+          </td>
+        `;
+
+        const recTr = document.createElement('tr');
+        recTr.id = `rec-row-${student.id}`;
+        recTr.className = 'hidden';
+        recTr.innerHTML = `
+          <td colspan="5">
+            <div class="recordings-box" id="rec-box-${student.id}">
+              Načítám nahrávky...
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+        tbody.appendChild(recTr);
+      });
+    }
+
+    async function toggleRecordings(studentId) {
+      const recRow = document.getElementById(`rec-row-${studentId}`);
+      const recBox = document.getElementById(`rec-box-${studentId}`);
+
+      if (!recRow.classList.contains('hidden')) {
+        recRow.classList.add('hidden');
+        return;
+      }
+
+      recRow.classList.remove('hidden');
+      recBox.innerHTML = 'Načítám nahrávky...';
+
+      const { data: logs, error } = await db
+        .from('practice_logs')
+        .select('*')
+        .eq('user_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error || !logs || logs.length === 0) {
+        recBox.innerHTML = '<em>Žák zatím neposlal žádné nahrávky.</em>';
+        return;
+      }
+
+      let html = '<strong>Seznam nahrávek:</strong><div style="margin-top: 8px;">';
+      logs.forEach(log => {
+        const dateStr = new Date(log.created_at).toLocaleString('cs-CZ');
+        html += `
+          <div class="recording-item" id="log-item-${log.id}">
+            <div class="recording-header">
+              <span class="recording-date">🕒 ${dateStr}</span>
+              <button class="btn-delete" onclick="deleteRecording('${log.id}', '${log.audio_url}', '${studentId}')">🗑️ Smazat</button>
+            </div>
+            ${log.audio_url ? `<audio controls src="${log.audio_url}" style="height: 30px; width: 100%;"></audio>` : '<em>Záznam bez zvuku</em>'}
+            
+            <div class="comment-box">
+              <input type="text" id="comment-input-${log.id}" class="comment-input" placeholder="Napsat poznámku pro žáka..." value="${log.teacher_comment || ''}">
+              <button class="btn-comment" onclick="saveComment('${log.id}')">💬 Uložit komentář</button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      recBox.innerHTML = html;
+    }
+
+    async function saveComment(logId) {
+      const commentInput = document.getElementById(`comment-input-${logId}`);
+      const text = commentInput.value;
+
+      const { error } = await db
+        .from('practice_logs')
+        .update({ teacher_comment: text })
+        .eq('id', logId);
+
+      if (error) alert('Chyba uložení: ' + error.message);
+      else alert('Komentář byl uložen!');
+    }
+
+    async function deleteRecording(logId, audioUrl, studentId) {
+      if (!confirm('Opravdu chceš tuto nahrávku trvale smazat?')) return;
+
+      // 1. Smazání z DB
+      const { error: dbErr } = await db.from('practice_logs').delete().eq('id', logId);
+      if (dbErr) return alert('Chyba při mazání z DB: ' + dbErr.message);
+
+      // 2. Smazání ze Storage
+      if (audioUrl) {
+        const path = audioUrl.split('/recordings/')[1];
+        if (path) await db.storage.from('recordings').remove([path]);
+      }
+
+      // Obnovíme rozbalený panel
+      document.getElementById(`rec-row-${studentId}`).classList.add('hidden');
+      toggleRecordings(studentId);
+    }
+
+    function changeVal(studentId, field, step) {
+      const input = document.getElementById(`${field}-${studentId}`);
+      let current = parseInt(input.value) || 0;
+      input.value = Math.max(0, current + step);
+    }
+
+    async function saveStudent(studentId) {
+      const newStreak = parseInt(document.getElementById(`streak-${studentId}`).value) || 0;
+      const newStars = parseInt(document.getElementById(`stars-${studentId}`).value) || 0;
+
+      const { error } = await db.from('profiles').update({ streak: newStreak, stars: newStars }).eq('id', studentId);
+      if (error) alert('Chyba při ukládání: ' + error.message);
+      else alert('Změny úspěšně uloženy!');
+    }
+
+    async function logoutAdmin() {
+      await db.auth.signOut();
+      location.reload();
+    }
+
+    checkSession();
+  </script>
+</body>
+</html>

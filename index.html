@@ -4,474 +4,379 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg-color: #f8f9fa;
+      --bg-color: #f4f7f6;
       --card-bg: #ffffff;
-      --primary-red: #ff3b30;
-      --primary-red-hover: #e02d23;
+      --primary-color: #2ecc71;
+      --danger-color: #ff3b30;
+      --primary-blue: #3498db;
       --text-color: #2c3e50;
       --border-color: #e2e8f0;
-      --fire-color: #ff9500;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .app-container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    h1 { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); display: inline-block; padding-bottom: 4px; }
+    
+    .stats-bar { display: flex; gap: 15px; background: var(--card-bg); padding: 10px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .stat-item { text-align: center; }
+    .stat-val { font-weight: bold; font-size: 1.2rem; }
+    .stat-lbl { font-size: 0.75rem; color: #7f8c8d; }
 
-    header {
-      width: 100%;
-      max-width: 1100px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
+    .auth-card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 400px; margin: 40px auto; width: 100%; }
+    .auth-card h2 { margin-bottom: 15px; text-align: center; }
+    .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; }
+    .btn-danger { background: var(--danger-color); color: white; }
 
-    h1.title {
-      font-size: 2.5rem;
-      color: #2ecc71;
-      font-weight: 700;
-      border-bottom: 3px solid #2ecc71;
-      padding-bottom: 5px;
-    }
+    .main-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
 
-    /* Statistiky */
-    .stats-bar {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 10px 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      text-align: right;
-    }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
-    .stats-icons {
-      font-size: 1.4rem;
-      font-weight: bold;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-    }
-
-    .stats-labels {
-      font-size: 0.8rem;
-      color: #7f8c8d;
-      margin-top: 4px;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-    }
-
-    /* Hlavní Layout */
-    .dashboard {
-      width: 100%;
-      max-width: 1100px;
-      display: grid;
-      grid-template-columns: 340px 1fr 280px;
-      gap: 25px;
-      align-items: start;
-    }
-
-    /* Kalendárium */
-    .calendar-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .calendar-card h2 {
-      font-size: 1.4rem;
-      margin-bottom: 15px;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 5px;
-    }
-
-    .week-row {
-      margin-bottom: 15px;
-    }
-
-    /* Notová osnova a obrázek klíče */
-    .stave-wrapper {
-      position: relative;
-      width: 100%;
-      height: 75px;
-    }
-
-    .clef-img {
-      position: absolute;
-      left: 5px;
-      top: 5px;
-      height: 60px;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .stave-container {
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-    }
-
-    /* Styly pro noty a tooltip */
-    .note-group {
-      cursor: pointer;
-    }
-
-    .note-head.active {
-      fill: var(--fire-color);
-      filter: drop-shadow(0px 0px 4px var(--fire-color));
-    }
-
-    .note-tooltip {
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s ease-in-out;
-      pointer-events: none;
-    }
-
-    .note-group:hover .note-tooltip {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    /* Nahrávání (Střed) */
-    .recorder-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 0;
-    }
-
-    .record-btn {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background-color: var(--primary-red);
-      border: 8px solid #ffffff;
-      box-shadow: 0 10px 25px rgba(255, 59, 48, 0.4);
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.2s, background-color 0.2s;
-      outline: none;
-    }
-
-    .record-btn:hover {
-      transform: scale(1.05);
-      background-color: var(--primary-red-hover);
-    }
-
-    .record-btn:active {
-      transform: scale(0.95);
-    }
-
-    .record-btn.recording {
-      animation: pulse 1.5s infinite;
-      background-color: #c0392b;
-    }
+    /* Recorder */
+    .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .mic-btn { width: 90px; height: 90px; border-radius: 50%; background: var(--danger-color); border: none; color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+    .mic-btn:active { transform: scale(0.95); }
+    .mic-btn.recording { animation: pulse 1.2s infinite; background: #c0392b; }
 
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
-      70% { box-shadow: 0 0 0 25px rgba(255, 59, 48, 0); }
+      70% { box-shadow: 0 0 0 20px rgba(255, 59, 48, 0); }
       100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
     }
 
-    .mic-icon {
-      width: 70px;
-      height: 70px;
-      fill: white;
-    }
+    /* Kalendář */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-top: 8px; }
+    .day-name { font-size: 0.75rem; font-weight: bold; color: #7f8c8d; }
+    .cal-day { padding: 6px 2px; font-size: 0.8rem; border-radius: 6px; background: #f1f5f9; color: #334155; }
+    .cal-day.empty { background: transparent; }
+    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
 
-    .status-text {
-      margin-top: 20px;
-      font-weight: 600;
-      color: #7f8c8d;
-    }
+    /* Žebříček */
+    .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    .leader-item:last-child { border-bottom: none; }
 
-    .audio-preview {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 300px;
-    }
+    /* Komentáře učitele */
+    .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
+    .comment-text { background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
 
-    /* Pravý panel */
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .info-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .info-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .edit-link {
-      font-size: 0.8rem;
-      color: #3498db;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .goal-list {
-      list-style: none;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .user-info p {
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 4px;
-    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1 class="title">Keyboard Hero</h1>
-    <div class="stats-bar">
-      <div class="stats-icons">
-        <span>🔥 : <span id="streak-count">1</span></span>
-        <span>🎵 : <span id="sent-count">60</span></span>
-        <span>⭐ : <span id="star-count">0</span></span>
-      </div>
-      <div class="stats-labels">
-        <span>denní řada</span>
-        <span>odesláno</span>
-        <span>koncert</span>
-      </div>
-    </div>
-  </header>
+  <div class="app-container">
 
-  <div class="dashboard">
-    
-    <div class="calendar-card">
-      <h2>Kalendárium</h2>
+    <div id="auth-section" class="auth-card">
+      <h2 id="auth-title">Přihlášení žáka</h2>
       
-      <div class="week-row">
-        <div class="stave-wrapper">
-          <img src="treble-clef.png" alt="Houslový klíč" class="clef-img" 
-               onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e8/G-clef.svg'">
+      <label style="font-size: 0.85rem; color: #666;">Uživatelské jméno:</label>
+      <input type="text" id="auth-username" class="input-field" placeholder="jannovak">
+
+      <div id="reg-fields" class="hidden">
+        <label style="font-size: 0.85rem; color: #666;">Celé jméno:</label>
+        <input type="text" id="auth-fullname" class="input-field" placeholder="Jan Novák">
+      </div>
+
+      <label style="font-size: 0.85rem; color: #666;">Heslo:</label>
+      <input type="password" id="auth-password" class="input-field" placeholder="Heslo">
+
+      <button id="btn-login" class="btn btn-primary" onclick="login()">Přihlásit se</button>
+      <button id="btn-signup" class="btn btn-primary hidden" onclick="signup()">Zaregistrovat se</button>
+      
+      <button class="btn btn-secondary" onclick="toggleAuthMode()" id="btn-toggle">Chci se zaregistrovat</button>
+    </div>
+
+    <div id="app-section" class="hidden">
+      
+      <header>
+        <h1>Keyboard Hero</h1>
+        <div class="stats-bar">
+          <div class="stat-item">
+            <div class="stat-val">🔥 : <span id="stat-streak">0</span></div>
+            <div class="stat-lbl">denní řada</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">🎵 : <span id="stat-sent">0</span></div>
+            <div class="stat-lbl">odesláno</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">⭐ : <span id="stat-stars">0</span></div>
+            <div class="stat-lbl">koncert</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="main-grid">
+        
+        <div class="card">
+          <h3>🎼 Kalendář</h3>
+          <div id="calendar-month-name" style="font-weight: bold; margin: 8px 0 4px 0; color: #3498db; text-transform: capitalize; font-size: 0.9rem;"></div>
           
-          <svg class="stave-container" viewBox="0 0 240 70">
-            <line x1="0" y1="20" x2="240" y2="20" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="28" x2="240" y2="28" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="36" x2="240" y2="36" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="44" x2="240" y2="44" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="52" x2="240" y2="52" stroke="#ccc" stroke-width="1"/>
-
-            <g class="note-group">
-              <g class="note-head active">
-                <ellipse cx="65" cy="44" rx="5" ry="4" transform="rotate(-20 65 44)" />
-                <line x1="69" y1="43" x2="69" y2="20" stroke="var(--fire-color)" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="35" y="-5" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="65" y="9" fill="#fff" font-size="10" text-anchor="middle">Pondělí ✅</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="90" cy="40" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 90 40)" />
-                <line x1="94" y1="39" x2="94" y2="16" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="60" y="-9" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="90" y="5" fill="#fff" font-size="10" text-anchor="middle">Úterý ❌</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="115" cy="36" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 115 36)" />
-                <line x1="119" y1="35" x2="119" y2="12" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="85" y="-13" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="115" y="1" fill="#fff" font-size="10" text-anchor="middle">Středa ❌</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="140" cy="32" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 140 32)" />
-                <line x1="144" y1="31" x2="144" y2="8" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="110" y="-17" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="140" y="-3" fill="#fff" font-size="10" text-anchor="middle">Čtvrtek ❌</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="165" cy="28" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 165 28)" />
-                <line x1="169" y1="27" x2="169" y2="4" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="135" y="-21" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="165" y="-7" fill="#fff" font-size="10" text-anchor="middle">Pátek ❌</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="190" cy="24" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 190 24)" />
-                <line x1="186" y1="25" x2="186" y2="48" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="160" y="-25" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="190" y="-11" fill="#fff" font-size="10" text-anchor="middle">Sobota ❌</text>
-              </g>
-            </g>
-
-            <g class="note-group">
-              <g class="note-head">
-                <ellipse cx="215" cy="20" rx="5" ry="4" fill="none" stroke="#666" stroke-width="1.5" transform="rotate(-20 215 20)" />
-                <line x1="211" y1="21" x2="211" y2="44" stroke="#666" stroke-width="1.5"/>
-              </g>
-              <g class="note-tooltip">
-                <rect x="185" y="-29" width="60" height="20" rx="4" fill="#2c3e50" opacity="0.9"/>
-                <text x="215" y="-15" fill="#fff" font-size="10" text-anchor="middle">Neděle ❌</text>
-              </g>
-            </g>
-          </svg>
+          <div class="calendar-grid">
+            <div class="day-name">Po</div><div class="day-name">Út</div><div class="day-name">St</div>
+            <div class="day-name">Čt</div><div class="day-name">Pá</div><div class="day-name">So</div><div class="day-name">Ne</div>
+          </div>
+          <div id="calendar-days" class="calendar-grid"></div>
         </div>
+
+        <div class="card recorder-card">
+          <h3>Nahrávání Cvičení</h3>
+          <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
+          <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
+          <audio id="audio-playback" controls hidden></audio>
+
+          <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
+          
+          <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">💬 Hodnocení od učitele</h4>
+          <div id="my-comments-box" style="width: 100%; max-height: 180px; overflow-y: auto;">
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="card">
+            <h3>🏆 Žebříček (Top Žáci)</h3>
+            <div id="leaderboard-box" style="margin-top: 10px;">
+              </div>
+          </div>
+
+          <div class="card">
+            <h3>👤 Profil žáka</h3>
+            <p style="margin-top: 8px; font-size: 0.9rem;"><strong>Jméno:</strong> <span id="profile-name">-</span></p>
+            <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
+          </div>
+        </div>
+
       </div>
 
-      <div class="week-row">
-        <div class="stave-wrapper">
-          <img src="treble-clef.png" alt="Houslový klíč" class="clef-img" 
-               onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e8/G-clef.svg'">
-          <svg class="stave-container" viewBox="0 0 240 70">
-            <line x1="0" y1="20" x2="240" y2="20" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="28" x2="240" y2="28" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="36" x2="240" y2="36" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="44" x2="240" y2="44" stroke="#ccc" stroke-width="1"/>
-            <line x1="0" y1="52" x2="240" y2="52" stroke="#ccc" stroke-width="1"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="recorder-section">
-      <button class="record-btn" id="recordBtn" title="Klikni pro nahrávání">
-        <svg class="mic-icon" viewBox="0 0 24 24">
-          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-        </svg>
-      </button>
-      <div class="status-text" id="statusText">Klikni pro zahájení nahrávání</div>
-      <audio id="audioPlayback" class="audio-preview" controls hidden></audio>
-    </div>
-
-    <div class="right-panel">
-      <div class="info-card">
-        <div class="info-card-header">
-          <strong>nastavit cíl:</strong>
-          <span class="edit-link">upravit cíl</span>
-        </div>
-        <ul class="goal-list">
-          <li>7 dní - 1 den volna</li>
-          <li>10 dní - 2 dny volna</li>
-          <li>14 dní - 3 dny volna</li>
-        </ul>
-      </div>
-
-      <div class="info-card user-info">
-        <div class="info-card-header">
-          <strong>Profil žáka</strong>
-        </div>
-        <p><strong>Jméno:</strong> Jan Novák (2012)</p>
-        <p><strong>Email:</strong> jan.novak@email.cz</p>
-        <p><strong>Tel:</strong> +420 777 123 456</p>
-        <div style="margin-top: 10px; text-align: right;">
-          <span class="edit-link">Upravit Údaje</span>
-        </div>
-      </div>
     </div>
 
   </div>
 
   <script>
-    const recordBtn = document.getElementById('recordBtn');
-    const statusText = document.getElementById('statusText');
-    const audioPlayback = document.getElementById('audioPlayback');
-    const sentCountEl = document.getElementById('sent-count');
-    
-    let mediaRecorder;
+    const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
+
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let isSignUpMode = false;
 
-    recordBtn.addEventListener('click', async () => {
-      if (!isRecording) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
+    function makeInternalEmail(username) {
+      const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+      return `${cleanUsername}@keyboardhero.internal`;
+    }
 
-          mediaRecorder.ondataavailable = event => {
-            audioChunks.push(event.data);
-          };
+    function toggleAuthMode() {
+      isSignUpMode = !isSignUpMode;
+      document.getElementById('auth-title').innerText = isSignUpMode ? 'Registrace žáka' : 'Přihlášení žáka';
+      document.getElementById('reg-fields').classList.toggle('hidden', !isSignUpMode);
+      document.getElementById('btn-login').classList.toggle('hidden', isSignUpMode);
+      document.getElementById('btn-signup').classList.toggle('hidden', !isSignUpMode);
+      document.getElementById('btn-toggle').innerText = isSignUpMode ? 'Zpět na Přihlášení' : 'Chci se zaregistrovat';
+    }
 
-          mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            audioPlayback.src = audioUrl;
-            audioPlayback.hidden = false;
+    async function login() {
+      const username = document.getElementById('auth-username').value;
+      const password = document.getElementById('auth-password').value;
+      if (!username || !password) return alert('Vyplň jméno i heslo!');
+
+      const email = makeInternalEmail(username);
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+      if (error) alert('Chyba: ' + error.message);
+      else initApp(data.user);
+    }
+
+    async function signup() {
+      const username = document.getElementById('auth-username').value;
+      const fullName = document.getElementById('auth-fullname').value;
+      const password = document.getElementById('auth-password').value;
+      if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
+
+      const email = makeInternalEmail(username);
+      const { data, error } = await db.auth.signUp({
+        email, password, options: { data: { full_name: fullName, role: 'student' } }
+      });
+      if (error) alert('Chyba: ' + error.message);
+      else { alert('Registrace úspěšná! Nyní se přihlaš.'); toggleAuthMode(); }
+    }
+
+    async function logout() {
+      await db.auth.signOut();
+      location.reload();
+    }
+
+    async function initApp(user) {
+      currentUser = user;
+      document.getElementById('auth-section').classList.add('hidden');
+      document.getElementById('app-section').classList.remove('hidden');
+
+      await loadUserProfile();
+      await renderCalendar();
+      await loadLeaderboard();
+      await loadMyComments();
+      await setupAudioRecording();
+    }
+
+    async function loadUserProfile() {
+      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (profile) {
+        document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+        document.getElementById('stat-streak').innerText = profile.streak || 0;
+        document.getElementById('stat-stars').innerText = profile.stars || 0;
+      }
+      const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+      document.getElementById('stat-sent').innerText = count || 0;
+    }
+
+    async function renderCalendar() {
+      const daysContainer = document.getElementById('calendar-days');
+      const monthNameEl = document.getElementById('calendar-month-name');
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+
+      const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+      monthNameEl.innerText = `${monthNames[month]} ${year}`;
+
+      const startOfMonth = new Date(year, month, 1).toISOString();
+      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+      const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', startOfMonth).lte('created_at', endOfMonth);
+
+      const playedDays = new Set();
+      if (logs) logs.forEach(log => playedDays.add(new Date(log.created_at).getDate()));
+
+      const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      daysContainer.innerHTML = '';
+      for (let i = 0; i < firstDayIndex; i++) {
+        daysContainer.appendChild(Object.assign(document.createElement('div'), { className: 'cal-day empty' }));
+      }
+      for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day' + (playedDays.has(day) ? ' played' : '');
+        cell.innerText = day;
+        daysContainer.appendChild(cell);
+      }
+    }
+
+    async function loadLeaderboard() {
+      const box = document.getElementById('leaderboard-box');
+      const { data: topStudents } = await db.from('profiles').select('full_name, stars, streak').eq('role', 'student').order('stars', { ascending: false }).limit(5);
+
+      if (!topStudents || topStudents.length === 0) {
+        box.innerHTML = '<em>Zatím bez dat.</em>';
+        return;
+      }
+
+      box.innerHTML = '';
+      topStudents.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'leader-item';
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>⭐ ${s.stars || 0} (🔥${s.streak || 0})</span>`;
+        box.appendChild(item);
+      });
+    }
+
+    async function loadMyComments() {
+      const box = document.getElementById('my-comments-box');
+      const { data: logs } = await db.from('practice_logs').select('*').eq('user_id', currentUser.id).not('teacher_comment', 'is', null).order('created_at', { ascending: false });
+
+      if (!logs || logs.length === 0) {
+        box.innerHTML = '<em style="font-size: 0.8rem; color: #7f8c8d;">Zatím nemáš žádné komentáře od učitele.</em>';
+        return;
+      }
+
+      box.innerHTML = '';
+      logs.forEach(log => {
+        const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
+        const div = document.createElement('div');
+        div.className = 'my-recording-item';
+        div.innerHTML = `<strong>📅 ${dateStr}:</strong><div class="comment-text">💬 "${log.teacher_comment}"</div>`;
+        box.appendChild(div);
+      });
+    }
+
+    async function setupAudioRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const statusText = document.getElementById('status-text');
+          const audioPlayback = document.getElementById('audio-playback');
+
+          audioPlayback.src = URL.createObjectURL(audioBlob);
+          audioPlayback.hidden = false;
+          statusText.innerText = "Ukládám nahrávku...";
+
+          try {
+            const fileName = `${currentUser.id}/${Date.now()}.wav`;
+            const { error: uploadError } = await db.storage.from('recordings').upload(fileName, audioBlob, { contentType: 'audio/wav' });
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = db.storage.from('recordings').getPublicUrl(fileName);
+            const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
+            if (dbError) throw dbError;
+
+            statusText.innerText = "Nahrávka odeslána učiteli! ✅";
+            statusText.style.color = "#2ecc71";
             
-            let currentSent = parseInt(sentCountEl.innerText);
-            sentCountEl.innerText = currentSent + 1;
-          };
+            await loadUserProfile();
+            await renderCalendar();
+            await loadLeaderboard();
 
-          mediaRecorder.start();
-          isRecording = true;
-          recordBtn.classList.add('recording');
-          statusText.innerText = "Nahrávám... Klikni pro ukončení";
-          statusText.style.color = "#ff3b30";
-        } catch (err) {
-          alert('Pro nahrávání je potřeba povolit přístup k mikrofonu.');
-        }
+          } catch (err) {
+            statusText.innerText = "Chyba při ukládání nahrávky ❌";
+            statusText.style.color = "#ff3b30";
+          }
+        };
+      } catch (err) {
+        document.getElementById('status-text').innerText = "Mikrofon není dostupný.";
+      }
+    }
+
+    function toggleRecording() {
+      if (!mediaRecorder) return alert('Mikrofon není připraven!');
+      const btn = document.getElementById('record-btn');
+      const statusText = document.getElementById('status-text');
+
+      if (!isRecording) {
+        audioChunks = [];
+        mediaRecorder.start();
+        isRecording = true;
+        btn.classList.add('recording');
+        statusText.innerText = "Nahrávám...";
+        statusText.style.color = "#ff3b30";
       } else {
         mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        
         isRecording = false;
-        recordBtn.classList.remove('recording');
-        statusText.innerText = "Nahrávka připravena!";
-        statusText.style.color = "#2ecc71";
+        btn.classList.remove('recording');
       }
-    });
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) initApp(session.user);
+    }
+
+    checkSession();
   </script>
 </body>
 </html>
