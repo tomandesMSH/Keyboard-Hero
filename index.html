@@ -326,6 +326,7 @@
 
     function toggleMute() {
       const btn = document.getElementById('mute-toggle');
+      if (!btn) return;
       const nowMuted = !isMuted();
       try {
         localStorage.setItem('kh_muted', String(nowMuted));
@@ -336,7 +337,9 @@
     }
 
     function initMuteToggle() {
-      document.getElementById('mute-toggle').innerText = isMuted() ? '🔇' : '🔊';
+      const btn = document.getElementById('mute-toggle');
+      if (!btn) return;
+      btn.innerText = isMuted() ? '🔇' : '🔊';
     }
 
     function playFanfare() {
@@ -357,6 +360,14 @@
           osc.start(startTime);
           osc.stop(startTime + 0.3);
         });
+        const totalDurationMs = ((notes.length - 1) * 0.12 + 0.3) * 1000;
+        setTimeout(() => {
+          try {
+            audioCtx.close();
+          } catch (err) {
+            // Already closed or unable to close — nothing more to do.
+          }
+        }, totalDurationMs);
       } catch (err) {
         // Web Audio unavailable/blocked — celebration continues visually only.
       }
