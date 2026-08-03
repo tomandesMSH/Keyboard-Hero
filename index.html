@@ -87,6 +87,10 @@
     .badge-chip { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: #f1f5f9; opacity: 0.35; filter: grayscale(1); }
     .badge-chip.unlocked { opacity: 1; filter: none; background: #fff7ed; box-shadow: 0 0 0 2px #ff9f43 inset; }
 
+    .daily-reminder { margin-top: 10px; padding: 8px 12px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; text-align: center; }
+    .daily-reminder.pending { background: #fff7ed; color: #c2410c; }
+    .daily-reminder.done { background: #ecfdf5; color: #047857; }
+
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
     .comment-text { background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
@@ -166,7 +170,8 @@
           <h3>Nahrávání Cvičení</h3>
           <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
           <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
-        
+          <div id="daily-reminder" class="daily-reminder pending"></div>
+
           <pre>
           </pre>
 
@@ -229,6 +234,23 @@
     let audioChunks = [];
     let isRecording = false;
     let isSignUpMode = false;
+    let currentPlayedDateKeys = [];
+
+    function isCurrentWeekPerfect() {
+      return KHGame.isPerfectWeek(currentPlayedDateKeys, new Date());
+    }
+
+    function updateDailyReminder(playedDateKeys) {
+      const banner = document.getElementById('daily-reminder');
+      const today = new Date();
+      if (KHGame.hasPlayedToday(playedDateKeys, today)) {
+        banner.className = 'daily-reminder done';
+        banner.innerText = '🎉 Dnes už máš splněno! Zítra můžeš pokračovat v řadě.';
+      } else {
+        banner.className = 'daily-reminder pending';
+        banner.innerText = '🎯 Dnes ještě nehrálo/a jsi! Zahraj a udrž řadu.';
+      }
+    }
 
     function makeInternalEmail(username) {
       const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
@@ -293,8 +315,8 @@
       document.getElementById('auth-section').classList.add('hidden');
       document.getElementById('app-section').classList.remove('hidden');
 
-      await loadUserProfile();
       await renderCalendar();
+      await loadUserProfile();
       await loadLeaderboard();
       await loadMyComments();
       await setupAudioRecording();
@@ -338,12 +360,6 @@
       }
     }
 
-    // Placeholder until Task 5 wires real calendar data in; keeps this task
-    // runnable and testable on its own.
-    function isCurrentWeekPerfect() {
-      return false;
-    }
-
     async function renderCalendar() {
       const daysContainer = document.getElementById('calendar-days');
       const monthNameEl = document.getElementById('calendar-month-name');
@@ -360,7 +376,13 @@
       const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', startOfMonth).lte('created_at', endOfMonth);
 
       const playedDays = new Set();
-      if (logs) logs.forEach(log => playedDays.add(new Date(log.created_at).getDate()));
+      const playedDateKeys = [];
+      if (logs) logs.forEach(log => {
+        const d = new Date(log.created_at);
+        playedDays.add(d.getDate());
+        playedDateKeys.push(KHGame.toDateKey(d));
+      });
+      currentPlayedDateKeys = playedDateKeys;
 
       const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
       const totalDays = new Date(year, month + 1, 0).getDate();
@@ -375,6 +397,8 @@
         cell.innerText = day;
         daysContainer.appendChild(cell);
       }
+
+      updateDailyReminder(playedDateKeys);
     }
 
     async function loadLeaderboard() {
@@ -452,8 +476,8 @@
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
             
-            await loadUserProfile();
             await renderCalendar();
+            await loadUserProfile();
             await loadLeaderboard();
 
           } catch (err) {
