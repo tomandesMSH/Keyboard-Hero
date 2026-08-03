@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero - Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-logic.js"></script>
   <style>
     :root {
       --bg-color: #f8f9fa;
@@ -92,6 +93,8 @@
               <th>Jméno</th>
               <th>🔥 Streak</th>
               <th>⭐ Koncert</th>
+              <th>Level</th>
+              <th>Odznaky</th>
               <th>Akce</th>
             </tr>
           </thead>
@@ -147,17 +150,30 @@
 
     async function loadStudents() {
       const tbody = document.getElementById('students-table-body');
-      tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Načítám žáky...</td></tr>';
 
       const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student');
 
       if (error || !students || students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Žádní žáci nebyli nalezeni.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Žádní žáci nebyli nalezeni.</td></tr>';
         return;
       }
 
+      const counts = await Promise.all(students.map(s =>
+        db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', s.id)
+      ));
+
       tbody.innerHTML = '';
-      students.forEach(student => {
+      students.forEach((student, idx) => {
+        const totalRecordings = counts[idx].count || 0;
+        const levelInfo = KHGame.computeLevel(student.stars || 0);
+        const badges = KHGame.computeBadges({
+          stars: student.stars || 0,
+          streak: student.streak || 0,
+          totalRecordings: totalRecordings
+        });
+        const badgeIcons = badges.filter(b => b.unlocked).map(b => b.icon).join(' ') || '—';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><code>${student.username || '—'}</code></td>
@@ -176,6 +192,8 @@
               <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
             </div>
           </td>
+          <td>Level ${levelInfo.level} · ${levelInfo.title}</td>
+          <td style="font-size: 1.1rem;">${badgeIcons}</td>
           <td>
             <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
             <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
@@ -186,7 +204,7 @@
         recTr.id = `rec-row-${student.id}`;
         recTr.className = 'hidden';
         recTr.innerHTML = `
-          <td colspan="5">
+          <td colspan="7">
             <div class="recordings-box" id="rec-box-${student.id}">
               Načítám nahrávky...
             </div>
