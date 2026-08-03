@@ -30,3 +30,30 @@ test('computeLevel: negative/undefined stars treated as 0', () => {
   assert.equal(KHGame.computeLevel(-5).level, 1);
   assert.equal(KHGame.computeLevel(undefined).level, 1);
 });
+
+test('computeBadges: no activity unlocks nothing', () => {
+  const badges = KHGame.computeBadges({ stars: 0, streak: 0, totalRecordings: 0 });
+  assert.ok(badges.every(b => b.unlocked === false));
+  assert.equal(badges.length, KHGame.BADGES.length);
+});
+
+test('computeBadges: first recording unlocks only Nováček', () => {
+  const badges = KHGame.computeBadges({ stars: 0, streak: 0, totalRecordings: 1 });
+  const unlocked = badges.filter(b => b.unlocked).map(b => b.id);
+  assert.deepEqual(unlocked, ['novacek']);
+});
+
+test('computeBadges: streak of 7 unlocks pravidelnost and tyden-v-ohni but not mesic-discipliny', () => {
+  const badges = KHGame.computeBadges({ stars: 0, streak: 7, totalRecordings: 0 });
+  const unlocked = badges.filter(b => b.unlocked).map(b => b.id);
+  assert.ok(unlocked.includes('pravidelnost'));
+  assert.ok(unlocked.includes('tyden-v-ohni'));
+  assert.ok(!unlocked.includes('mesic-discipliny'));
+});
+
+test('computeBadges: perfectWeek flag drives perfektni-tyden badge', () => {
+  const withoutFlag = KHGame.computeBadges({ perfectWeek: false });
+  const withFlag = KHGame.computeBadges({ perfectWeek: true });
+  assert.equal(withoutFlag.find(b => b.id === 'perfektni-tyden').unlocked, false);
+  assert.equal(withFlag.find(b => b.id === 'perfektni-tyden').unlocked, true);
+});
