@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-logic.js"></script>
   <style>
     :root {
       --bg-color: #f4f7f6;
@@ -79,6 +80,12 @@
     /* Žebříček */
     .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     .leader-item:last-child { border-bottom: none; }
+
+    .level-progress-track { width: 100%; height: 10px; background: #e2e8f0; border-radius: 6px; margin-top: 6px; overflow: hidden; }
+    .level-progress-fill { height: 100%; background: linear-gradient(90deg, #ff9f43, #2ecc71); border-radius: 6px; transition: width 0.4s ease; }
+    .badge-shelf { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .badge-chip { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: #f1f5f9; opacity: 0.35; filter: grayscale(1); }
+    .badge-chip.unlocked { opacity: 1; filter: none; background: #fff7ed; box-shadow: 0 0 0 2px #ff9f43 inset; }
 
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -182,6 +189,19 @@
           <div class="card">
             <h3>👤 Profil žáka</h3>
             <p style="margin-top: 8px; font-size: 0.9rem;"><strong>Jméno:</strong> <span id="profile-name">-</span></p>
+
+            <div class="level-block" style="margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                <span id="level-title">Level 1 · Nováček</span>
+                <span id="level-stars-to-next">10 ⭐ do dalšího levelu</span>
+              </div>
+              <div class="level-progress-track">
+                <div id="level-progress-fill" class="level-progress-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div id="badge-shelf" class="badge-shelf"></div>
+
             <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
           </div>
         </div>
@@ -289,6 +309,35 @@
       }
       const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
       document.getElementById('stat-sent').innerText = count || 0;
+
+      renderLevelAndBadges(profile, count || 0, isCurrentWeekPerfect());
+    }
+
+    function renderLevelAndBadges(profile, totalRecordings, perfectWeek) {
+      const stars = (profile && profile.stars) || 0;
+      const streak = (profile && profile.streak) || 0;
+      const levelInfo = KHGame.computeLevel(stars);
+
+      document.getElementById('level-title').innerText = `Level ${levelInfo.level} · ${levelInfo.title}`;
+      document.getElementById('level-stars-to-next').innerText = `${levelInfo.starsToNext} ⭐ do dalšího levelu`;
+      document.getElementById('level-progress-fill').style.width = `${Math.round(levelInfo.progress * 100)}%`;
+
+      const badges = KHGame.computeBadges({ stars, streak, totalRecordings, perfectWeek });
+      const shelf = document.getElementById('badge-shelf');
+      shelf.innerHTML = '';
+      badges.forEach(badge => {
+        const chip = document.createElement('div');
+        chip.className = 'badge-chip' + (badge.unlocked ? ' unlocked' : '');
+        chip.title = badge.label;
+        chip.innerText = badge.icon;
+        shelf.appendChild(chip);
+      });
+    }
+
+    // Placeholder until Task 5 wires real calendar data in; keeps this task
+    // runnable and testable on its own.
+    function isCurrentWeekPerfect() {
+      return false;
     }
 
     async function renderCalendar() {
