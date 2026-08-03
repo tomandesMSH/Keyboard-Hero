@@ -314,24 +314,28 @@
     }
 
     function renderLevelAndBadges(profile, totalRecordings, perfectWeek) {
-      const stars = (profile && profile.stars) || 0;
-      const streak = (profile && profile.streak) || 0;
-      const levelInfo = KHGame.computeLevel(stars);
+      try {
+        const stars = (profile && profile.stars) || 0;
+        const streak = (profile && profile.streak) || 0;
+        const levelInfo = KHGame.computeLevel(stars);
 
-      document.getElementById('level-title').innerText = `Level ${levelInfo.level} · ${levelInfo.title}`;
-      document.getElementById('level-stars-to-next').innerText = `${levelInfo.starsToNext} ⭐ do dalšího levelu`;
-      document.getElementById('level-progress-fill').style.width = `${Math.round(levelInfo.progress * 100)}%`;
+        document.getElementById('level-title').innerText = `Level ${levelInfo.level} · ${levelInfo.title}`;
+        document.getElementById('level-stars-to-next').innerText = `${levelInfo.starsToNext} ⭐ do dalšího levelu`;
+        document.getElementById('level-progress-fill').style.width = `${Math.round(levelInfo.progress * 100)}%`;
 
-      const badges = KHGame.computeBadges({ stars, streak, totalRecordings, perfectWeek });
-      const shelf = document.getElementById('badge-shelf');
-      shelf.innerHTML = '';
-      badges.forEach(badge => {
-        const chip = document.createElement('div');
-        chip.className = 'badge-chip' + (badge.unlocked ? ' unlocked' : '');
-        chip.title = badge.label;
-        chip.innerText = badge.icon;
-        shelf.appendChild(chip);
-      });
+        const badges = KHGame.computeBadges({ stars, streak, totalRecordings, perfectWeek });
+        const shelf = document.getElementById('badge-shelf');
+        shelf.innerHTML = '';
+        badges.forEach(badge => {
+          const chip = document.createElement('div');
+          chip.className = 'badge-chip' + (badge.unlocked ? ' unlocked' : '');
+          chip.title = badge.label;
+          chip.innerText = badge.icon;
+          shelf.appendChild(chip);
+        });
+      } catch (err) {
+        console.warn('Failed to render level and badges:', err);
+      }
     }
 
     // Placeholder until Task 5 wires real calendar data in; keeps this task
