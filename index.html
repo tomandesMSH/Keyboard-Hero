@@ -97,6 +97,7 @@
     .kh-levelup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; cursor: pointer; }
     .kh-levelup-card { background: white; padding: 30px 40px; border-radius: 16px; font-size: 1.4rem; font-weight: bold; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: kh-pop 0.4s ease; }
     @keyframes kh-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .mute-btn { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; margin-top: 6px; }
 
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -176,6 +177,7 @@
         <div class="card recorder-card">
           <h3>Nahrávání Cvičení</h3>
           <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
+          <button id="mute-toggle" class="mute-btn" onclick="toggleMute()" title="Ztlumit/zapnout zvuky">🔊</button>
           <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
           <div id="daily-reminder" class="daily-reminder pending"></div>
 
@@ -309,7 +311,100 @@
       overlay.innerHTML = `<div class="kh-levelup-card">🎉 LEVEL UP! 🎉<br>Level ${levelInfo.level} · ${levelInfo.title}</div>`;
       overlay.onclick = () => overlay.remove();
       document.body.appendChild(overlay);
+      fireConfetti();
+      playFanfare();
       setTimeout(() => overlay.remove(), 3500);
+    }
+
+    function isMuted() {
+      try {
+        return localStorage.getItem('kh_muted') === 'true';
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function toggleMute() {
+      const btn = document.getElementById('mute-toggle');
+      const nowMuted = !isMuted();
+      try {
+        localStorage.setItem('kh_muted', String(nowMuted));
+      } catch (err) {
+        // localStorage unavailable — mute state just won't persist across reloads.
+      }
+      btn.innerText = nowMuted ? '🔇' : '🔊';
+    }
+
+    function initMuteToggle() {
+      document.getElementById('mute-toggle').innerText = isMuted() ? '🔇' : '🔊';
+    }
+
+    function playFanfare() {
+      if (isMuted()) return;
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.value = freq;
+          osc.type = 'triangle';
+          const startTime = audioCtx.currentTime + i * 0.12;
+          gain.gain.setValueAtTime(0.2, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+      } catch (err) {
+        // Web Audio unavailable/blocked — celebration continues visually only.
+      }
+    }
+
+    function fireConfetti() {
+      if (document.getElementById('kh-confetti-canvas')) return;
+      const canvas = document.createElement('canvas');
+      canvas.id = 'kh-confetti-canvas';
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1002;';
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      const colors = ['#ff3b30', '#2ecc71', '#3498db', '#ff9f43', '#8e44ad'];
+      const particles = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * canvas.height * 0.3,
+        size: 4 + Math.random() * 6,
+        speedY: 2 + Math.random() * 3,
+        speedX: -2 + Math.random() * 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360
+      }));
+
+      let frame = 0;
+      function tick() {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += 6;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        if (frame < 90) {
+          requestAnimationFrame(tick);
+        } else {
+          canvas.remove();
+        }
+      }
+      tick();
     }
 
     function makeInternalEmail(username) {
@@ -380,6 +475,7 @@
       await loadLeaderboard();
       await loadMyComments();
       await setupAudioRecording();
+      initMuteToggle();
     }
 
     async function loadUserProfile() {
@@ -537,7 +633,9 @@
             statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
-            
+            fireConfetti();
+            playFanfare();
+
             await renderCalendar();
             await loadUserProfile();
             await loadLeaderboard();
