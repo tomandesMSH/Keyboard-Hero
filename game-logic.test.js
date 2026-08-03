@@ -57,3 +57,33 @@ test('computeBadges: perfectWeek flag drives perfektni-tyden badge', () => {
   assert.equal(withoutFlag.find(b => b.id === 'perfektni-tyden').unlocked, false);
   assert.equal(withFlag.find(b => b.id === 'perfektni-tyden').unlocked, true);
 });
+
+test('toDateKey: formats as YYYY-MM-DD with zero-padding', () => {
+  assert.equal(KHGame.toDateKey(new Date(2026, 0, 5)), '2026-01-05');
+  assert.equal(KHGame.toDateKey(new Date(2026, 10, 21)), '2026-11-21');
+});
+
+test('isPerfectWeek: true when every day from Monday through today has an entry', () => {
+  const today = new Date(2026, 7, 5);
+  const dayOfWeek = (today.getDay() + 6) % 7;
+  const played = [];
+  for (let i = 0; i <= dayOfWeek; i++) {
+    const d = new Date(2026, 7, 5 - (dayOfWeek - i));
+    played.push(KHGame.toDateKey(d));
+  }
+  assert.equal(KHGame.isPerfectWeek(played, today), true);
+});
+
+test('isPerfectWeek: false when a day earlier in the week is missing', () => {
+  const today = new Date(2026, 7, 5);
+  const dayOfWeek = (today.getDay() + 6) % 7;
+  if (dayOfWeek === 0) return; // today is Monday, nothing earlier to remove
+  const played = [KHGame.toDateKey(today)]; // only today, missing earlier days
+  assert.equal(KHGame.isPerfectWeek(played, today), false);
+});
+
+test('hasPlayedToday: true only if today key present', () => {
+  const today = new Date(2026, 7, 5);
+  assert.equal(KHGame.hasPlayedToday([KHGame.toDateKey(today)], today), true);
+  assert.equal(KHGame.hasPlayedToday(['2026-08-04'], today), false);
+});

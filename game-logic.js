@@ -60,12 +60,40 @@
     });
   }
 
+  function toDateKey(date) {
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, '0');
+    var d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  // playedDateKeys: array of 'YYYY-MM-DD' strings for days the student practiced.
+  // today: a Date object (injectable so tests don't depend on the real clock).
+  function isPerfectWeek(playedDateKeys, today) {
+    var playedSet = {};
+    playedDateKeys.forEach(function (key) { playedSet[key] = true; });
+
+    var dayOfWeek = (today.getDay() + 6) % 7; // 0 = Monday
+    for (var i = 0; i <= dayOfWeek; i++) {
+      var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (dayOfWeek - i));
+      if (!playedSet[toDateKey(d)]) return false;
+    }
+    return true;
+  }
+
+  function hasPlayedToday(playedDateKeys, today) {
+    return playedDateKeys.indexOf(toDateKey(today)) !== -1;
+  }
+
   var KHGame = {
     LEVEL_TITLES: LEVEL_TITLES,
     STARS_PER_LEVEL: STARS_PER_LEVEL,
     computeLevel: computeLevel,
     BADGES: BADGES,
-    computeBadges: computeBadges
+    computeBadges: computeBadges,
+    toDateKey: toDateKey,
+    isPerfectWeek: isPerfectWeek,
+    hasPlayedToday: hasPlayedToday
   };
 
   if (typeof module !== 'undefined' && module.exports) {
