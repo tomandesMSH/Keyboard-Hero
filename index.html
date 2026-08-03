@@ -7,8 +7,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="game-logic.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap');
+
     :root {
-      --bg-color: #f4f7f6;
+      --bg-color: #fef6e4;
       --card-bg: #ffffff;
       --primary-color: #2ecc71;
       --danger-color: #ff3b30;
@@ -18,7 +20,8 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    body { background: linear-gradient(160deg, #fef6e4 0%, #e0f7fa 100%); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    h1, h3, h4, .btn { font-family: 'Fredoka', 'Segoe UI', sans-serif; }
     .app-container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
 
     header { display: flex; justify-content: space-between; align-items: center; }
@@ -32,7 +35,9 @@
     .auth-card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 400px; margin: 40px auto; width: 100%; }
     .auth-card h2 { margin-bottom: 15px; text-align: center; }
     .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
-    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .btn:active { transform: translateY(0) scale(0.97); }
     .btn-primary { background: var(--primary-color); color: white; }
     .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; }
     .btn-danger { background: var(--danger-color); color: white; }
@@ -40,7 +45,7 @@
     .main-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: start; }
     @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
 
-    .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
     /* Recorder - 3 Stavy mikrofonu */
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -75,7 +80,8 @@
     .day-name { font-size: 0.75rem; font-weight: bold; color: #7f8c8d; }
     .cal-day { padding: 6px 2px; font-size: 0.8rem; border-radius: 6px; background: #f1f5f9; color: #334155; }
     .cal-day.empty { background: transparent; }
-    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
+    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; animation: kh-day-pop 0.35s ease; }
+    @keyframes kh-day-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
     /* Žebříček */
     .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -98,6 +104,11 @@
     .kh-levelup-card { background: white; padding: 30px 40px; border-radius: 16px; font-size: 1.4rem; font-weight: bold; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: kh-pop 0.4s ease; }
     @keyframes kh-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .mute-btn { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; margin-top: 6px; }
+    .mascot { font-size: 2.5rem; margin-bottom: 6px; display: inline-block; }
+    .mascot.recording { animation: kh-mascot-bounce 0.6s infinite; }
+    .mascot.celebrating { animation: kh-mascot-spin 0.6s ease; }
+    @keyframes kh-mascot-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes kh-mascot-spin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.3); } to { transform: rotate(360deg) scale(1); } }
 
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -176,6 +187,7 @@
 
         <div class="card recorder-card">
           <h3>Nahrávání Cvičení</h3>
+          <div id="mascot" class="mascot">🎵</div>
           <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
           <button id="mute-toggle" class="mute-btn" onclick="toggleMute()" title="Ztlumit/zapnout zvuky">🔊</button>
           <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
@@ -644,6 +656,8 @@
             statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
+            document.getElementById('mascot').classList.add('celebrating');
+            setTimeout(() => document.getElementById('mascot').classList.remove('celebrating'), 700);
             fireConfetti();
             playFanfare();
 
@@ -666,22 +680,25 @@
       if (!mediaRecorder) return alert('Mikrofon není připraven!');
       const btn = document.getElementById('record-btn');
       const statusText = document.getElementById('status-text');
+      const mascot = document.getElementById('mascot');
 
       if (!isRecording) {
         audioChunks = [];
         mediaRecorder.start();
         isRecording = true;
-        
+
         // Resetujeme stav odesláno a aktivujeme nahrávání
         btn.classList.remove('sent');
         btn.classList.add('recording');
-        
+        mascot.classList.add('recording');
+
         statusText.innerText = "Nahrávám...";
         statusText.style.color = "#ff3b30";
       } else {
         mediaRecorder.stop();
         isRecording = false;
         btn.classList.remove('recording');
+        mascot.classList.remove('recording');
       }
     }
 
