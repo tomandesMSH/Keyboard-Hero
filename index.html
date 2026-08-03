@@ -91,6 +91,13 @@
     .daily-reminder.pending { background: #fff7ed; color: #c2410c; }
     .daily-reminder.done { background: #ecfdf5; color: #047857; }
 
+    .kh-toast { position: fixed; top: 20px; right: 20px; background: white; border-radius: 10px; padding: 12px 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); animation: kh-toast-in 0.3s ease; z-index: 1000; }
+    @keyframes kh-toast-in { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .kh-levelup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; cursor: pointer; }
+    .kh-levelup-card { background: white; padding: 30px 40px; border-radius: 16px; font-size: 1.4rem; font-weight: bold; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: kh-pop 0.4s ease; }
+    @keyframes kh-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
     .comment-text { background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
@@ -252,6 +259,59 @@
       }
     }
 
+    function getUnlockStorageKey() {
+      return 'kh_seen_' + currentUser.id;
+    }
+
+    function readSeenState() {
+      try {
+        const raw = localStorage.getItem(getUnlockStorageKey());
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function writeSeenState(state) {
+      try {
+        localStorage.setItem(getUnlockStorageKey(), JSON.stringify(state));
+      } catch (err) {
+        // localStorage unavailable (private mode etc.) — celebrations just won't persist across sessions.
+      }
+    }
+
+    function checkForNewUnlocks(levelInfo, badges) {
+      const seen = readSeenState();
+      const unlockedIds = badges.filter(b => b.unlocked).map(b => b.id);
+
+      if (seen) {
+        if (levelInfo.level > seen.level) {
+          showLevelUpCelebration(levelInfo);
+        }
+        const newBadges = badges.filter(b => b.unlocked && !seen.badgeIds.includes(b.id));
+        newBadges.forEach(showBadgeToast);
+      }
+
+      writeSeenState({ level: levelInfo.level, badgeIds: unlockedIds });
+    }
+
+    function showBadgeToast(badge) {
+      const toast = document.createElement('div');
+      toast.className = 'kh-toast';
+      toast.innerHTML = `<strong>${badge.icon} Nový odznak!</strong><div>${badge.label}</div>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showLevelUpCelebration(levelInfo) {
+      const overlay = document.createElement('div');
+      overlay.className = 'kh-levelup-overlay';
+      overlay.innerHTML = `<div class="kh-levelup-card">🎉 LEVEL UP! 🎉<br>Level ${levelInfo.level} · ${levelInfo.title}</div>`;
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 3500);
+    }
+
     function makeInternalEmail(username) {
       const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
       return `${cleanUsername}@keyboardhero.internal`;
@@ -355,6 +415,8 @@
           chip.innerText = badge.icon;
           shelf.appendChild(chip);
         });
+
+        checkForNewUnlocks(levelInfo, badges);
       } catch (err) {
         console.warn('Failed to render level and badges:', err);
       }
