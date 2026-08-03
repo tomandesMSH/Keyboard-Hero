@@ -41,11 +41,27 @@
 
     .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
-    /* Recorder */
+    /* Recorder - 3 Stavy mikrofonu */
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .mic-btn { width: 90px; height: 90px; border-radius: 50%; background: var(--danger-color); border: none; color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+
+    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+
+
     .mic-btn:active { transform: scale(0.95); }
-    .mic-btn.recording { animation: pulse 1.2s infinite; background: #c0392b; }
+    
+    /* 2. Stav: Při nahrávání */
+    .mic-btn.recording { 
+      animation: pulse 1.2s infinite; 
+      background: #c0392b; 
+      border-color: #c0392b; 
+    }
+
+    /* 3. Stav: Po úspěšném odeslání */
+    .mic-btn.sent { 
+      background: var(--primary-color); 
+      border-color: var(--primary-color); 
+      box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); 
+    }
 
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
@@ -89,6 +105,11 @@
       <label style="font-size: 0.85rem; color: #666;">Heslo:</label>
       <input type="password" id="auth-password" class="input-field" placeholder="Heslo">
 
+      <label style="font-size: 0.85rem; color: #666; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
+        <input type="checkbox" id="auth-remember" checked style="width: 16px; height: 16px;">
+        Zapamatovat si mě
+      </label>
+
       <button id="btn-login" class="btn btn-primary" onclick="login()">Přihlásit se</button>
       <button id="btn-signup" class="btn btn-primary hidden" onclick="signup()">Zaregistrovat se</button>
       
@@ -117,6 +138,10 @@
         </div>
       </header>
 
+      <pre>
+        
+      </pre>
+
       <div class="main-grid">
         
         <div class="card">
@@ -134,20 +159,24 @@
           <h3>Nahrávání Cvičení</h3>
           <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
           <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
+        
+          <pre>
+          </pre>
+
           <audio id="audio-playback" controls hidden></audio>
 
           <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
           
           <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">💬 Hodnocení od učitele</h4>
           <div id="my-comments-box" style="width: 100%; max-height: 180px; overflow-y: auto;">
-            </div>
+          </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card">
             <h3>🏆 Žebříček (Top Žáci)</h3>
             <div id="leaderboard-box" style="margin-top: 10px;">
-              </div>
+            </div>
           </div>
 
           <div class="card">
@@ -167,7 +196,13 @@
     const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
 
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Inicializace klienta Supabase
+    let db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    });
 
     let currentUser = null;
     let mediaRecorder = null;
@@ -192,12 +227,26 @@
     async function login() {
       const username = document.getElementById('auth-username').value;
       const password = document.getElementById('auth-password').value;
+      const rememberMe = document.getElementById('auth-remember').checked;
+
       if (!username || !password) return alert('Vyplň jméno i heslo!');
+
+      db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          storage: rememberMe ? window.localStorage : window.sessionStorage,
+          persistSession: true,
+          autoRefreshToken: true,
+        }
+      });
 
       const email = makeInternalEmail(username);
       const { data, error } = await db.auth.signInWithPassword({ email, password });
-      if (error) alert('Chyba: ' + error.message);
-      else initApp(data.user);
+
+      if (error) {
+        alert('Chyba přihlášení: ' + error.message);
+      } else {
+        initApp(data.user);
+      }
     }
 
     async function signup() {
@@ -277,7 +326,14 @@
 
     async function loadLeaderboard() {
       const box = document.getElementById('leaderboard-box');
-      const { data: topStudents } = await db.from('profiles').select('full_name, stars, streak').eq('role', 'student').order('stars', { ascending: false }).limit(5);
+      
+      const { data: topStudents } = await db
+        .from('profiles')
+        .select('full_name, stars, streak')
+        .eq('role', 'student')
+        .order('streak', { ascending: false })
+        .order('stars', { ascending: false })
+        .limit(5);
 
       if (!topStudents || topStudents.length === 0) {
         box.innerHTML = '<em>Zatím bez dat.</em>';
@@ -289,7 +345,7 @@
         const item = document.createElement('div');
         item.className = 'leader-item';
         const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>⭐ ${s.stars || 0} (🔥${s.streak || 0})</span>`;
+        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
         box.appendChild(item);
       });
     }
@@ -323,6 +379,7 @@
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
           const statusText = document.getElementById('status-text');
           const audioPlayback = document.getElementById('audio-playback');
+          const recBtn = document.getElementById('record-btn');
 
           audioPlayback.src = URL.createObjectURL(audioBlob);
           audioPlayback.hidden = false;
@@ -337,16 +394,19 @@
             const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
             if (dbError) throw dbError;
 
-            statusText.innerText = "Nahrávka odeslána učiteli! ✅";
+            // Zobrazíme zelený text a změníme mikrofon na stav 3 (zelený - .sent)
+            statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
+            recBtn.classList.add('sent');
             
             await loadUserProfile();
             await renderCalendar();
             await loadLeaderboard();
 
           } catch (err) {
-            statusText.innerText = "Chyba při ukládání nahrávky ❌";
+            statusText.innerText = "Chyba při ukládání nahrávky";
             statusText.style.color = "#ff3b30";
+            recBtn.classList.remove('sent');
           }
         };
       } catch (err) {
@@ -363,7 +423,11 @@
         audioChunks = [];
         mediaRecorder.start();
         isRecording = true;
+        
+        // Resetujeme stav odesláno a aktivujeme nahrávání
+        btn.classList.remove('sent');
         btn.classList.add('recording');
+        
         statusText.innerText = "Nahrávám...";
         statusText.style.color = "#ff3b30";
       } else {
