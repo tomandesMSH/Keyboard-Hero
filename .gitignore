@@ -1,0 +1,12 @@
+# Claude Code / agent tooling (local machine state, not project source)
+.claude/
+.agents/
+skills-lock.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
