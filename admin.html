@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero - Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-logic.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap');
+
     :root {
       --bg-color: #f8f9fa;
       --card-bg: #ffffff;
@@ -17,6 +20,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    h1, h2, .btn-primary, .btn-logout { font-family: 'Fredoka', 'Segoe UI', sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-color); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     .container { width: 100%; max-width: 950px; }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
@@ -29,7 +33,7 @@
     .btn-primary { width: 100%; padding: 10px; background: var(--primary-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
     .btn-primary-false { width: 100%; padding: 10px; background: var(--primary-green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
     
-    .table-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; }
+    .table-card { background: var(--card-bg); border-radius: 18px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
     th { background-color: #f1f5f9; color: #475569; }
@@ -92,6 +96,8 @@
               <th>Jméno</th>
               <th>🔥 Streak</th>
               <th>⭐ Koncert</th>
+              <th>Level</th>
+              <th>Odznaky</th>
               <th>Akce</th>
             </tr>
           </thead>
@@ -147,17 +153,45 @@
 
     async function loadStudents() {
       const tbody = document.getElementById('students-table-body');
-      tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Načítám žáky...</td></tr>';
 
       const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student');
 
       if (error || !students || students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Žádní žáci nebyli nalezeni.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Žádní žáci nebyli nalezeni.</td></tr>';
         return;
       }
 
+      // Each count promise handles its own failure so one bad request can't reject Promise.all
+      // (and so we don't rely on the supabase-js `throwOnError: false` default).
+      const counts = await Promise.all(students.map(s =>
+        db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', s.id)
+          .then(r => ({ count: (r && r.count) || 0 }))
+          .catch(() => ({ count: 0 }))
+      ));
+
       tbody.innerHTML = '';
-      students.forEach(student => {
+      students.forEach((student, idx) => {
+        const totalRecordings = (counts[idx] && counts[idx].count) || 0;
+        // KHGame may be missing/broken — fall back per row so one failure can't blank the table.
+        let levelLabel = 'Level ?';
+        let badgeIcons = '—';
+        try {
+          const levelInfo = KHGame.computeLevel(student.stars || 0);
+          levelLabel = `Level ${levelInfo.level} · ${levelInfo.title}`;
+          const badges = KHGame.computeBadges({
+            stars: student.stars || 0,
+            streak: student.streak || 0,
+            totalRecordings: totalRecordings
+          });
+          // 'perfektni-tyden' is intentionally omitted here: the admin table has no per-student
+          // practice_logs date range, so this badge could never unlock and would be shown
+          // incorrectly (a student may legitimately see it unlocked on their own profile).
+          badgeIcons = badges.filter(b => b.unlocked && b.id !== 'perfektni-tyden').map(b => b.icon).join(' ') || '—';
+        } catch (err) {
+          console.warn('Level/badge computation failed for student', student.id, err);
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><code>${student.username || '—'}</code></td>
@@ -176,6 +210,8 @@
               <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
             </div>
           </td>
+          <td>${levelLabel}</td>
+          <td style="font-size: 1.1rem;">${badgeIcons}</td>
           <td>
             <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
             <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
@@ -186,7 +222,7 @@
         recTr.id = `rec-row-${student.id}`;
         recTr.className = 'hidden';
         recTr.innerHTML = `
-          <td colspan="5">
+          <td colspan="7">
             <div class="recordings-box" id="rec-box-${student.id}">
               Načítám nahrávky...
             </div>

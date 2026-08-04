@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-logic.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap');
+
     :root {
-      --bg-color: #f4f7f6;
       --card-bg: #ffffff;
       --primary-color: #2ecc71;
       --danger-color: #ff3b30;
@@ -17,7 +19,8 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    body { background: linear-gradient(160deg, #fef6e4 0%, #e0f7fa 100%); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    h1, h3, h4, .btn { font-family: 'Fredoka', 'Segoe UI', sans-serif; }
     .app-container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
 
     header { display: flex; justify-content: space-between; align-items: center; }
@@ -31,7 +34,9 @@
     .auth-card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 400px; margin: 40px auto; width: 100%; }
     .auth-card h2 { margin-bottom: 15px; text-align: center; }
     .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
-    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .btn:active { transform: translateY(0) scale(0.97); }
     .btn-primary { background: var(--primary-color); color: white; }
     .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; }
     .btn-danger { background: var(--danger-color); color: white; }
@@ -39,7 +44,7 @@
     .main-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: start; }
     @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
 
-    .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
     /* Recorder - 3 Stavy mikrofonu */
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -74,11 +79,35 @@
     .day-name { font-size: 0.75rem; font-weight: bold; color: #7f8c8d; }
     .cal-day { padding: 6px 2px; font-size: 0.8rem; border-radius: 6px; background: #f1f5f9; color: #334155; }
     .cal-day.empty { background: transparent; }
-    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
+    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; animation: kh-day-pop 0.35s ease; }
+    @keyframes kh-day-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
     /* Žebříček */
     .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     .leader-item:last-child { border-bottom: none; }
+
+    .level-progress-track { width: 100%; height: 10px; background: #e2e8f0; border-radius: 6px; margin-top: 6px; overflow: hidden; }
+    .level-progress-fill { height: 100%; background: linear-gradient(90deg, #ff9f43, #2ecc71); border-radius: 6px; transition: width 0.4s ease; }
+    .badge-shelf { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .badge-chip { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: #f1f5f9; opacity: 0.35; filter: grayscale(1); overflow: hidden; }
+    .badge-chip.unlocked { opacity: 1; filter: none; background: #fff7ed; box-shadow: 0 0 0 2px #ff9f43 inset; }
+
+    .daily-reminder { margin-top: 10px; padding: 8px 12px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; text-align: center; }
+    .daily-reminder.pending { background: #fff7ed; color: #c2410c; }
+    .daily-reminder.done { background: #ecfdf5; color: #047857; }
+
+    .kh-toast { position: fixed; top: 20px; right: 20px; background: white; border-radius: 10px; padding: 12px 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); animation: kh-toast-in 0.3s ease; z-index: 1000; }
+    @keyframes kh-toast-in { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .kh-levelup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; cursor: pointer; }
+    .kh-levelup-card { background: white; padding: 30px 40px; border-radius: 16px; font-size: 1.4rem; font-weight: bold; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: kh-pop 0.4s ease; }
+    @keyframes kh-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .mute-btn { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; margin-top: 6px; }
+    .mascot { font-size: 2.5rem; margin-bottom: 6px; display: inline-block; }
+    .mascot.recording { animation: kh-mascot-bounce 0.6s infinite; }
+    .mascot.celebrating { animation: kh-mascot-spin 0.6s ease; }
+    @keyframes kh-mascot-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes kh-mascot-spin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.3); } to { transform: rotate(360deg) scale(1); } }
 
     /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -157,9 +186,12 @@
 
         <div class="card recorder-card">
           <h3>Nahrávání Cvičení</h3>
+          <div id="mascot" class="mascot">🎵</div>
           <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
+          <button id="mute-toggle" class="mute-btn" onclick="toggleMute()" title="Ztlumit/zapnout zvuky">🔊</button>
           <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
-        
+          <div id="daily-reminder" class="daily-reminder pending"></div>
+
           <pre>
           </pre>
 
@@ -182,6 +214,19 @@
           <div class="card">
             <h3>👤 Profil žáka</h3>
             <p style="margin-top: 8px; font-size: 0.9rem;"><strong>Jméno:</strong> <span id="profile-name">-</span></p>
+
+            <div class="level-block" style="margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                <span id="level-title">Level 1 · Nováček</span>
+                <span id="level-stars-to-next">10 ⭐ do dalšího levelu</span>
+              </div>
+              <div class="level-progress-track">
+                <div id="level-progress-fill" class="level-progress-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div id="badge-shelf" class="badge-shelf"></div>
+
             <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
           </div>
         </div>
@@ -209,6 +254,200 @@
     let audioChunks = [];
     let isRecording = false;
     let isSignUpMode = false;
+    let currentPlayedDateKeys = [];
+
+    function isCurrentWeekPerfect() {
+      // KHGame may be missing (script failed to load) — degrade to "not perfect" instead of throwing.
+      try {
+        return KHGame.isPerfectWeek(currentPlayedDateKeys, new Date());
+      } catch (err) {
+        console.warn('isPerfectWeek unavailable:', err);
+        return false;
+      }
+    }
+
+    function updateDailyReminder(playedDateKeys) {
+      const banner = document.getElementById('daily-reminder');
+      const today = new Date();
+      let playedToday = false;
+      // KHGame may be missing (script failed to load) — degrade to the "pending" reminder.
+      try {
+        playedToday = KHGame.hasPlayedToday(playedDateKeys, today);
+      } catch (err) {
+        console.warn('hasPlayedToday unavailable:', err);
+      }
+      if (playedToday) {
+        banner.className = 'daily-reminder done';
+        banner.innerText = '🎉 Dnes už máš splněno! Zítra můžeš pokračovat v řadě.';
+      } else {
+        banner.className = 'daily-reminder pending';
+        banner.innerText = '🎯 Dnes ještě nehrálo/a jsi! Zahraj a udrž řadu.';
+      }
+    }
+
+    function getUnlockStorageKey() {
+      return 'kh_seen_' + currentUser.id;
+    }
+
+    function readSeenState() {
+      try {
+        const raw = localStorage.getItem(getUnlockStorageKey());
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        // Only trust a value with the exact expected shape; anything else is treated as
+        // first-run so writeSeenState() can overwrite the corrupt entry with a valid baseline.
+        if (parsed && typeof parsed.level === 'number' && Array.isArray(parsed.badgeIds)) {
+          return parsed;
+        }
+        return null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function writeSeenState(state) {
+      try {
+        localStorage.setItem(getUnlockStorageKey(), JSON.stringify(state));
+      } catch (err) {
+        // localStorage unavailable (private mode etc.) — celebrations just won't persist across sessions.
+      }
+    }
+
+    function checkForNewUnlocks(levelInfo, badges) {
+      const seen = readSeenState();
+      const unlockedIds = badges.filter(b => b.unlocked).map(b => b.id);
+
+      if (seen) {
+        if (levelInfo.level > seen.level) {
+          showLevelUpCelebration(levelInfo);
+        }
+        const newBadges = badges.filter(b => b.unlocked && !seen.badgeIds.includes(b.id));
+        newBadges.forEach(showBadgeToast);
+      }
+
+      writeSeenState({ level: levelInfo.level, badgeIds: unlockedIds });
+    }
+
+    function showBadgeToast(badge) {
+      const toast = document.createElement('div');
+      toast.className = 'kh-toast';
+      toast.innerHTML = `<strong>${badge.icon} Nový odznak!</strong><div>${badge.label}</div>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showLevelUpCelebration(levelInfo) {
+      const overlay = document.createElement('div');
+      overlay.className = 'kh-levelup-overlay';
+      overlay.innerHTML = `<div class="kh-levelup-card">🎉 LEVEL UP! 🎉<br>Level ${levelInfo.level} · ${levelInfo.title}</div>`;
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+      fireConfetti();
+      playFanfare();
+      setTimeout(() => overlay.remove(), 3500);
+    }
+
+    function isMuted() {
+      try {
+        return localStorage.getItem('kh_muted') === 'true';
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function toggleMute() {
+      const btn = document.getElementById('mute-toggle');
+      if (!btn) return;
+      const nowMuted = !isMuted();
+      try {
+        localStorage.setItem('kh_muted', String(nowMuted));
+      } catch (err) {
+        // localStorage unavailable — mute state just won't persist across reloads.
+      }
+      btn.innerText = nowMuted ? '🔇' : '🔊';
+    }
+
+    function initMuteToggle() {
+      const btn = document.getElementById('mute-toggle');
+      if (!btn) return;
+      btn.innerText = isMuted() ? '🔇' : '🔊';
+    }
+
+    function playFanfare() {
+      if (isMuted()) return;
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.value = freq;
+          osc.type = 'triangle';
+          const startTime = audioCtx.currentTime + i * 0.12;
+          gain.gain.setValueAtTime(0.2, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+        const totalDurationMs = ((notes.length - 1) * 0.12 + 0.3) * 1000;
+        setTimeout(() => {
+          try {
+            audioCtx.close();
+          } catch (err) {
+            // Already closed or unable to close — nothing more to do.
+          }
+        }, totalDurationMs);
+      } catch (err) {
+        // Web Audio unavailable/blocked — celebration continues visually only.
+      }
+    }
+
+    function fireConfetti() {
+      if (document.getElementById('kh-confetti-canvas')) return;
+      const canvas = document.createElement('canvas');
+      canvas.id = 'kh-confetti-canvas';
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1002;';
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      const colors = ['#ff3b30', '#2ecc71', '#3498db', '#ff9f43', '#8e44ad'];
+      const particles = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * canvas.height * 0.3,
+        size: 4 + Math.random() * 6,
+        speedY: 2 + Math.random() * 3,
+        speedX: -2 + Math.random() * 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360
+      }));
+
+      let frame = 0;
+      function tick() {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += 6;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        if (frame < 90) {
+          requestAnimationFrame(tick);
+        } else {
+          canvas.remove();
+        }
+      }
+      tick();
+    }
 
     function makeInternalEmail(username) {
       const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
@@ -273,11 +512,12 @@
       document.getElementById('auth-section').classList.add('hidden');
       document.getElementById('app-section').classList.remove('hidden');
 
-      await loadUserProfile();
       await renderCalendar();
+      await loadUserProfile();
       await loadLeaderboard();
       await loadMyComments();
       await setupAudioRecording();
+      initMuteToggle();
     }
 
     async function loadUserProfile() {
@@ -289,6 +529,35 @@
       }
       const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
       document.getElementById('stat-sent').innerText = count || 0;
+
+      renderLevelAndBadges(profile, count || 0, isCurrentWeekPerfect());
+    }
+
+    function renderLevelAndBadges(profile, totalRecordings, perfectWeek) {
+      try {
+        const stars = (profile && profile.stars) || 0;
+        const streak = (profile && profile.streak) || 0;
+        const levelInfo = KHGame.computeLevel(stars);
+
+        document.getElementById('level-title').innerText = `Level ${levelInfo.level} · ${levelInfo.title}`;
+        document.getElementById('level-stars-to-next').innerText = `${levelInfo.starsToNext} ⭐ do dalšího levelu`;
+        document.getElementById('level-progress-fill').style.width = `${Math.round(levelInfo.progress * 100)}%`;
+
+        const badges = KHGame.computeBadges({ stars, streak, totalRecordings, perfectWeek });
+        const shelf = document.getElementById('badge-shelf');
+        shelf.innerHTML = '';
+        badges.forEach(badge => {
+          const chip = document.createElement('div');
+          chip.className = 'badge-chip' + (badge.unlocked ? ' unlocked' : '');
+          chip.title = badge.label;
+          chip.innerText = badge.icon;
+          shelf.appendChild(chip);
+        });
+
+        checkForNewUnlocks(levelInfo, badges);
+      } catch (err) {
+        console.warn('Failed to render level and badges:', err);
+      }
     }
 
     async function renderCalendar() {
@@ -301,13 +570,29 @@
       const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
       monthNameEl.innerText = `${monthNames[month]} ${year}`;
 
-      const startOfMonth = new Date(year, month, 1).toISOString();
+      // Query 7 days before the month starts so a week straddling the month boundary still has
+      // all its days available for isPerfectWeek(). The visible grid stays month-only below.
+      const queryStart = new Date(year, month, 1 - 7).toISOString();
       const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
-      const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', startOfMonth).lte('created_at', endOfMonth);
+      const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', queryStart).lte('created_at', endOfMonth);
 
       const playedDays = new Set();
-      if (logs) logs.forEach(log => playedDays.add(new Date(log.created_at).getDate()));
+      const playedDateKeys = [];
+      if (logs) logs.forEach(log => {
+        const d = new Date(log.created_at);
+        // Grid cells only for days inside the displayed month.
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          playedDays.add(d.getDate());
+        }
+        // KHGame may be missing (script failed to load) — skip the key rather than break the calendar.
+        try {
+          playedDateKeys.push(KHGame.toDateKey(d));
+        } catch (err) {
+          // Level/badge features degrade; the calendar grid still renders.
+        }
+      });
+      currentPlayedDateKeys = playedDateKeys;
 
       const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
       const totalDays = new Date(year, month + 1, 0).getDate();
@@ -322,6 +607,8 @@
         cell.innerText = day;
         daysContainer.appendChild(cell);
       }
+
+      updateDailyReminder(playedDateKeys);
     }
 
     async function loadLeaderboard() {
@@ -398,15 +685,26 @@
             statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
-            
-            await loadUserProfile();
-            await renderCalendar();
-            await loadLeaderboard();
-
           } catch (err) {
             statusText.innerText = "Chyba při ukládání nahrávky";
             statusText.style.color = "#ff3b30";
             recBtn.classList.remove('sent');
+            return;
+          }
+
+          // Post-success celebration + refresh. The recording is already saved at this point,
+          // so a failure here must never overwrite the success message shown above.
+          try {
+            document.getElementById('mascot').classList.add('celebrating');
+            setTimeout(() => document.getElementById('mascot').classList.remove('celebrating'), 700);
+            fireConfetti();
+            playFanfare();
+
+            await renderCalendar();
+            await loadUserProfile();
+            await loadLeaderboard();
+          } catch (err) {
+            console.warn('Post-upload celebration/refresh failed:', err);
           }
         };
       } catch (err) {
@@ -418,22 +716,25 @@
       if (!mediaRecorder) return alert('Mikrofon není připraven!');
       const btn = document.getElementById('record-btn');
       const statusText = document.getElementById('status-text');
+      const mascot = document.getElementById('mascot');
 
       if (!isRecording) {
         audioChunks = [];
         mediaRecorder.start();
         isRecording = true;
-        
+
         // Resetujeme stav odesláno a aktivujeme nahrávání
         btn.classList.remove('sent');
         btn.classList.add('recording');
-        
+        mascot.classList.add('recording');
+
         statusText.innerText = "Nahrávám...";
         statusText.style.color = "#ff3b30";
       } else {
         mediaRecorder.stop();
         isRecording = false;
         btn.classList.remove('recording');
+        mascot.classList.remove('recording');
       }
     }
 
