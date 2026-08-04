@@ -162,20 +162,35 @@
         return;
       }
 
+      // Each count promise handles its own failure so one bad request can't reject Promise.all
+      // (and so we don't rely on the supabase-js `throwOnError: false` default).
       const counts = await Promise.all(students.map(s =>
         db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', s.id)
+          .then(r => ({ count: (r && r.count) || 0 }))
+          .catch(() => ({ count: 0 }))
       ));
 
       tbody.innerHTML = '';
       students.forEach((student, idx) => {
-        const totalRecordings = counts[idx].count || 0;
-        const levelInfo = KHGame.computeLevel(student.stars || 0);
-        const badges = KHGame.computeBadges({
-          stars: student.stars || 0,
-          streak: student.streak || 0,
-          totalRecordings: totalRecordings
-        });
-        const badgeIcons = badges.filter(b => b.unlocked).map(b => b.icon).join(' ') || '—';
+        const totalRecordings = (counts[idx] && counts[idx].count) || 0;
+        // KHGame may be missing/broken — fall back per row so one failure can't blank the table.
+        let levelLabel = 'Level ?';
+        let badgeIcons = '—';
+        try {
+          const levelInfo = KHGame.computeLevel(student.stars || 0);
+          levelLabel = `Level ${levelInfo.level} · ${levelInfo.title}`;
+          const badges = KHGame.computeBadges({
+            stars: student.stars || 0,
+            streak: student.streak || 0,
+            totalRecordings: totalRecordings
+          });
+          // 'perfektni-tyden' is intentionally omitted here: the admin table has no per-student
+          // practice_logs date range, so this badge could never unlock and would be shown
+          // incorrectly (a student may legitimately see it unlocked on their own profile).
+          badgeIcons = badges.filter(b => b.unlocked && b.id !== 'perfektni-tyden').map(b => b.icon).join(' ') || '—';
+        } catch (err) {
+          console.warn('Level/badge computation failed for student', student.id, err);
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -195,7 +210,7 @@
               <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
             </div>
           </td>
-          <td>Level ${levelInfo.level} · ${levelInfo.title}</td>
+          <td>${levelLabel}</td>
           <td style="font-size: 1.1rem;">${badgeIcons}</td>
           <td>
             <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
