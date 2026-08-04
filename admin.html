@@ -89,6 +89,21 @@
         <button class="btn-logout" onclick="logoutAdmin()">Odhlásit se</button>
       </header>
 
+      <div class="table-card" id="pending-card" style="margin-bottom: 25px;">
+        <h2 style="margin-bottom: 15px; color: var(--gold-color);">Čekající registrace</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Uživatel</th>
+              <th>Jméno</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="pending-students-body">
+            </tbody>
+        </table>
+      </div>
+
       <div class="table-card">
         <h2 style="margin-bottom: 15px;">Přehled žáků</h2>
         <table>
@@ -154,13 +169,92 @@
     }
 
     async function loadStudents() {
+      await loadPendingStudents();
+      await loadApprovedStudents();
+    }
+
+    async function loadPendingStudents() {
+      const pendingBody = document.getElementById('pending-students-body');
+      pendingBody.innerHTML = '<tr><td colspan="3">Načítám žádosti...</td></tr>';
+
+      const { data: pending, error } = await db
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .eq('is_approved', false);
+
+      if (error || !pending || pending.length === 0) {
+        pendingBody.innerHTML = '<tr><td colspan="3"><em>Žádné nové registrace ke schválení.</em></td></tr>';
+        return;
+      }
+
+      pendingBody.innerHTML = '';
+      pending.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${student.username || '—'}</code></td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <button class="btn-save" onclick="approveStudent('${student.id}')">✓ Schválit</button>
+            <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectStudent('${student.id}')">✕ Zamítnout</button>
+          </td>
+        `;
+        pendingBody.appendChild(tr);
+      });
+    }
+
+    async function approveStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_approved: true }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při schvalování: ' + error.message);
+      } else {
+        alert('Žák byl úspěšně schválen!');
+        loadStudents();
+      }
+    }
+
+    async function rejectStudent(studentId) {
+      if (!confirm('Opravdu chceš tuto registraci zamítnout a smazat?')) return;
+
+      const { error } = await db.from('profiles').delete().eq('id', studentId);
+      if (error) {
+        alert('Chyba při mazání: ' + error.message);
+      } else {
+        alert('Žádost byla smazána.');
+        loadStudents();
+      }
+    }
+
+    async function banStudent(studentId) {
+      if (!confirm('Opravdu chceš tomuto žákovi udělit BAN? Nebude se moci přihlásit.')) return;
+
+      const { error } = await db.from('profiles').update({ is_banned: true }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při blokování: ' + error.message);
+      } else {
+        alert('Uživatel byl zablokován.');
+        loadApprovedStudents();
+      }
+    }
+
+    async function unbanStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_banned: false }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při odblokování: ' + error.message);
+      } else {
+        alert('BAN byl zrušen.');
+        loadApprovedStudents();
+      }
+    }
+
+    async function loadApprovedStudents() {
       const tbody = document.getElementById('students-table-body');
       tbody.innerHTML = '<tr><td colspan="7">Načítám žáky...</td></tr>';
 
-      const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student');
+      const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student').eq('is_approved', true);
 
       if (error || !students || students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Žádní žáci nebyli nalezeni.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">Žádní schválení žáci nebyli nalezeni.</td></tr>';
         return;
       }
 
@@ -194,9 +288,14 @@
           console.warn('Level/badge computation failed for student', student.id, err);
         }
 
+        const isBanned = student.is_banned || false;
         const tr = document.createElement('tr');
+        if (isBanned) tr.style.opacity = '0.6';
         tr.innerHTML = `
-          <td><code>${student.username || '—'}</code></td>
+          <td>
+            <code>${student.username || '—'}</code>
+            ${isBanned ? ' <span style="color: var(--primary-red); font-weight: 800;">(BANNED)</span>' : ''}
+          </td>
           <td><strong>${student.full_name || 'Bez jména'}</strong></td>
           <td>
             <div class="counter-control">
@@ -217,6 +316,11 @@
           <td>
             <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
             <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
+            ${
+              isBanned
+                ? `<button class="btn-save" style="background: var(--primary-blue); margin-left: 4px;" onclick="unbanStudent('${student.id}')">Unban</button>`
+                : `<button class="btn-delete" style="padding: 6px 10px; font-size: 0.8rem;" onclick="banStudent('${student.id}')">🚫 Ban</button>`
+            }
           </td>
         `;
 
