@@ -45,9 +45,9 @@
 
   function computeBadges(ctx) {
     var safeCtx = {
-      stars: (ctx && ctx.stars) || 0,
-      streak: (ctx && ctx.streak) || 0,
-      totalRecordings: (ctx && ctx.totalRecordings) || 0,
+      stars: Math.max(0, (ctx && ctx.stars) || 0),
+      streak: Math.max(0, (ctx && ctx.streak) || 0),
+      totalRecordings: Math.max(0, (ctx && ctx.totalRecordings) || 0),
       perfectWeek: !!(ctx && ctx.perfectWeek)
     };
     return BADGES.map(function (badge) {

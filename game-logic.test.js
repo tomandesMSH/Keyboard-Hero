@@ -51,6 +51,11 @@ test('computeBadges: streak of 7 unlocks pravidelnost and tyden-v-ohni but not m
   assert.ok(!unlocked.includes('mesic-discipliny'));
 });
 
+test('computeBadges: negative stars/streak/totalRecordings are clamped to 0', () => {
+  const badges = KHGame.computeBadges({ stars: -100, streak: -50, totalRecordings: -10 });
+  assert.ok(badges.every(b => b.unlocked === false));
+});
+
 test('computeBadges: perfectWeek flag drives perfektni-tyden badge', () => {
   const withoutFlag = KHGame.computeBadges({ perfectWeek: false });
   const withFlag = KHGame.computeBadges({ perfectWeek: true });
