@@ -18,7 +18,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-    .app-container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
+    .app-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; }
 
     header { display: flex; justify-content: space-between; align-items: center; }
     h1 { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); display: inline-block; padding-bottom: 4px; }
@@ -37,7 +37,7 @@
     .btn-danger { background: var(--danger-color); color: white; }
 
     .main-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: start; }
-    @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 850px) { .main-grid { grid-template-columns: 1fr; } }
 
     .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
@@ -76,13 +76,23 @@
     .cal-day.empty { background: transparent; }
     .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
 
-    /* Žebříček */
+    /* Žebříček & Komentáře */
     .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     .leader-item:last-child { border-bottom: none; }
 
-    /* Komentáře učitele */
     .my-recording-item { background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
     .comment-text { background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
+
+    /* Novinky */
+    .news-item { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem;}
+    .news-date { font-size: 0.75rem; color: #7f8c8d; display: block; margin-bottom: 2px; }
+
+    /* Nedávné nahrávky */
+    .recent-rec-item { background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border-color); }
+    .recent-rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; font-weight: bold; color: #475569; }
+    .btn-download { border: 1px solid var(--primary-blue); color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+
+    .warning-box { background: #fffbe3; border: 1px solid #f1c40f; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; color: #8a6d3b; margin-bottom: 10px; }
 
     .hidden { display: none !important; }
   </style>
@@ -119,7 +129,7 @@
     </div>
 
     <div id="app-section" class="hidden">
-      
+      <a href="http://tomandesmsh.github.io/Keyboard-Hero-Docs/">
       <header>
         <h1>Keyboard Hero</h1>
         <div class="stats-bar">
@@ -133,54 +143,71 @@
           </div>
           <div class="stat-item">
             <div class="stat-val">⭐ : <span id="stat-stars">0</span></div>
-            <div class="stat-lbl">koncert</div>
+            <div class="stat-lbl">koncertů</div>
           </div>
         </div>
       </header>
+    </a>
+<pre>
 
-      <pre>
-        
-      </pre>
-
+</pre>
       <div class="main-grid">
         
-        <div class="card">
-          <h3>🎼 Kalendář</h3>
-          <div id="calendar-month-name" style="font-weight: bold; margin: 8px 0 4px 0; color: #3498db; text-transform: capitalize; font-size: 0.9rem;"></div>
-          
-          <div class="calendar-grid">
-            <div class="day-name">Po</div><div class="day-name">Út</div><div class="day-name">St</div>
-            <div class="day-name">Čt</div><div class="day-name">Pá</div><div class="day-name">So</div><div class="day-name">Ne</div>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="card">
+            <h3>🎼 Kalendář</h3>
+            <div id="calendar-month-name" style="font-weight: bold; margin: 8px 0 4px 0; color: #3498db; text-transform: capitalize; font-size: 0.9rem;"></div>
+            
+            <div class="calendar-grid">
+              <div class="day-name">Po</div><div class="day-name">Út</div><div class="day-name">St</div>
+              <div class="day-name">Čt</div><div class="day-name">Pá</div><div class="day-name">So</div><div class="day-name">Ne</div>
+            </div>
+            <div id="calendar-days" class="calendar-grid"></div>
           </div>
-          <div id="calendar-days" class="calendar-grid"></div>
+
+          <div class="card">
+            <h3>Nedávné nahrávky</h3>
+            <div class="warning-box" style="margin-top: 8px;">
+              Starší nahrávky se průběžně mažou. Pokud o nahrávku nechceš přijít, stáhni si ji!
+            </div>
+            <div id="recent-recordings-box">
+              <em style="font-size: 0.8rem; color: #7f8c8d;">Načítám nedávné nahrávky...</em>
+            </div>
+          </div>
         </div>
 
-        <div class="card recorder-card">
-          <h3>Nahrávání Cvičení</h3>
-          <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
-          <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
-        
-          <pre>
-          </pre>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="card recorder-card">
+            <h3>Nahrávání Cvičení</h3>
+            <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
+            <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
 
-          <audio id="audio-playback" controls hidden></audio>
+            <audio id="audio-playback" controls hidden style="margin-top: 10px; width: 100%;"></audio>
 
-          <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
-          
-          <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">💬 Hodnocení od učitele</h4>
-          <div id="my-comments-box" style="width: 100%; max-height: 180px; overflow-y: auto;">
+            <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
+            
+            <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">Hodnocení od učitele</h4>
+            <div id="my-comments-box" style="width: 100%; max-height: 180px; overflow-y: auto;">
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🔔 Novinky a Upozornění</h3>
+            <div id="news-box" style="margin-top: 10px; max-height: 250px; overflow-y: auto;">
+              <em style="font-size: 0.8rem; color: #7f8c8d;">Načítám novinky...</em>
+            </div>
           </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card">
-            <h3>🏆 Žebříček (Top Žáci)</h3>
+            <h3>Žebříček (Top Žáci)</h3>
             <div id="leaderboard-box" style="margin-top: 10px;">
             </div>
           </div>
 
           <div class="card">
-            <h3>👤 Profil žáka</h3>
+            <h3>Profil žáka</h3>
             <p style="margin-top: 8px; font-size: 0.9rem;"><strong>Jméno:</strong> <span id="profile-name">-</span></p>
             <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
           </div>
@@ -196,7 +223,6 @@
     const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
 
-    // Inicializace klienta Supabase
     let db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         persistSession: true,
@@ -277,6 +303,8 @@
       await renderCalendar();
       await loadLeaderboard();
       await loadMyComments();
+      await loadRecentRecordings();
+      await loadNews();
       await setupAudioRecording();
     }
 
@@ -344,7 +372,7 @@
       topStudents.forEach((s, idx) => {
         const item = document.createElement('div');
         item.className = 'leader-item';
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${"‎ ‎ " + (idx + 1) + "‎"}.`;
         item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
         box.appendChild(item);
       });
@@ -365,6 +393,99 @@
         const div = document.createElement('div');
         div.className = 'my-recording-item';
         div.innerHTML = `<strong>📅 ${dateStr}:</strong><div class="comment-text">💬 "${log.teacher_comment}"</div>`;
+        box.appendChild(div);
+      });
+    }
+
+    /* Načtení posledních 5 nahrávek s přehrávačem a tlačítkem Stáhnout */
+    async function loadRecentRecordings() {
+      const box = document.getElementById('recent-recordings-box');
+      const { data: logs } = await db
+        .from('practice_logs')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (!logs || logs.length === 0) {
+        box.innerHTML = '<em style="font-size: 0.8rem; color: #7f8c8d;">Zatím nemáš žádné nahrané cvičení.</em>';
+        return;
+      }
+
+      box.innerHTML = '';
+      logs.forEach((log, index) => {
+        const dateObj = new Date(log.created_at);
+        const dateStr = dateObj.toLocaleDateString('cs-CZ') + ' ' + dateObj.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+        
+        const div = document.createElement('div');
+        div.className = 'recent-rec-item';
+        div.innerHTML = `
+          <div class="recent-rec-header">
+            <span>Nahrávka #${logs.length - index} (${dateStr})</span>
+            ${log.audio_url ? `<a href="${log.audio_url}" download="nahravka_${dateObj.getTime()}.wav" target="_blank" class="btn-download">💾</a>` : ''}
+          </div>
+          ${log.audio_url ? `<audio controls src="${log.audio_url}" style="width: 100%; height: 32px;"></audio>` : '<em>Bez zvuku</em>'}
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    /* Načtení Novinek (Oznámení) */
+    async function loadNews() {
+      const box = document.getElementById('news-box');
+      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+      const { data: logs } = await db.from('practice_logs').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(10);
+
+      let newsList = [];
+
+      // 1. Zprávy o komentářích od učitele
+      if (logs) {
+        logs.forEach(log => {
+          if (log.teacher_comment) {
+            const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
+            newsList.push({
+              date: new Date(log.created_at),
+              text: `💬 <strong>Učitel okomentoval nahrávku z ${dateStr}:</strong> "${log.teacher_comment}"`
+            });
+          } else {
+            const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
+            newsList.push({
+              date: new Date(log.created_at),
+              text: `✅ Nahrávka z ${dateStr} byla v pořádku doručena učiteli.`
+            });
+          }
+        });
+      }
+
+      // 2. Stavové informace o profilu (streak a hvězdy)
+      if (profile) {
+        if (profile.streak > 0) {
+          newsList.push({
+            date: new Date(),
+            text: `🔥 Zvýšil si svoji denní řadu! Tvá aktuální řada je <strong>${profile.streak} dní</strong>. - jen tak dál!`
+          });
+        }
+        if (profile.stars > 0) {
+          newsList.push({
+            date: new Date(),
+            text: `⭐ Získal jsi celkem <strong>${profile.stars} hvězdiček</strong> na koncert!`
+          });
+        }
+      }
+
+      // Srovnáme novinky podle data (nejnovější nahoře)
+      newsList.sort((a, b) => b.date - a.date);
+
+      if (newsList.length === 0) {
+        box.innerHTML = '<em style="font-size: 0.8rem; color: #7f8c8d;">Zatím zde nejsou žádné nové zprávy.</em>';
+        return;
+      }
+
+      box.innerHTML = '';
+      newsList.slice(0, 5).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'news-item';
+        div.innerHTML = `<span class="news-date">🕒 ${item.date.toLocaleDateString('cs-CZ')}</span>${item.text}`;
         box.appendChild(div);
       });
     }
@@ -394,7 +515,6 @@
             const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
             if (dbError) throw dbError;
 
-            // Zobrazíme zelený text a změníme mikrofon na stav 3 (zelený - .sent)
             statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
@@ -402,6 +522,8 @@
             await loadUserProfile();
             await renderCalendar();
             await loadLeaderboard();
+            await loadRecentRecordings();
+            await loadNews();
 
           } catch (err) {
             statusText.innerText = "Chyba při ukládání nahrávky";
@@ -424,7 +546,6 @@
         mediaRecorder.start();
         isRecording = true;
         
-        // Resetujeme stav odesláno a aktivujeme nahrávání
         btn.classList.remove('sent');
         btn.classList.add('recording');
         
