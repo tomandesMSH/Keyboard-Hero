@@ -281,50 +281,97 @@
       }
     }
 
-    async function signup() {
-      const username = document.getElementById('auth-username').value;
-      const fullName = document.getElementById('auth-fullname').value;
-      const password = document.getElementById('auth-password').value;
-      if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
+async function signup() {
+  const username = document.getElementById('auth-username').value;
+  const fullName = document.getElementById('auth-fullname').value;
+  const password = document.getElementById('auth-password').value;
+  if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
 
-      const email = makeInternalEmail(username);
-      const { data, error } = await db.auth.signUp({
-        email, password, options: { data: { full_name: fullName, role: 'student' } }
-      });
-      if (error) alert('Chyba: ' + error.message);
-      else { alert('Registrace úspěšná! Nyní se přihlaš.'); toggleAuthMode(); }
+  const email = makeInternalEmail(username);
+  const { data, error } = await db.auth.signUp({
+    email, 
+    password, 
+    options: { 
+      data: { full_name: fullName, role: 'student' } 
     }
+  });
 
-    async function logout() {
-      await db.auth.signOut();
-      location.reload();
-    }
+  if (error) {
+    alert('Chyba registrace: ' + error.message);
+  } else {
+    // Odhlásíme dočasné přihlášení, které Supabase po signUp vytváří
+    await db.auth.signOut();
+    alert('Registrace byla úspěšně odeslána! Nyní musí tvůj účet schválit učitel (administrátor).');
+    toggleAuthMode();
+  }
+}
 
-    async function initApp(user) {
-      currentUser = user;
-      document.getElementById('auth-section').classList.add('hidden');
-      document.getElementById('app-section').classList.remove('hidden');
+async function loadUserProfile() {
+  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  
+  // Kontrola schválení účtu
+  if (profile && profile.role === 'student' && !profile.is_approved) {
+    alert('Tůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrdění.');
+    await logout();
+    return false;
+  }
 
-      await loadUserProfile();
-      await renderCalendar();
-      await loadLeaderboard();
-      await loadMyComments();
-      await loadRecentRecordings();
-      await loadNews();
-      await setupAudioRecording();
-    }
+  if (profile) {
+    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+    document.getElementById('stat-streak').innerText = profile.streak || 0;
+    document.getElementById('stat-stars').innerText = profile.stars || 0;
+  }
+  
+  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+  document.getElementById('stat-sent').innerText = count || 0;
+  return true;
+}
 
-    async function loadUserProfile() {
-      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-      if (profile) {
-        document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
-        document.getElementById('stat-streak').innerText = profile.streak || 0;
-        document.getElementById('stat-stars').innerText = profile.stars || 0;
-      }
-      const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-      document.getElementById('stat-sent').innerText = count || 0;
-    }
+async function initApp(user) {
+  currentUser = user;
+  
+  // Zkontrolujeme profil a schválení před zobrazením aplikace
+  const isApproved = await loadUserProfile();
+  if (!isApproved) return;
 
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('app-section').classList.remove('hidden');
+
+  await renderCalendar();
+  await loadLeaderboard();
+  await loadMyComments();
+  await loadRecentRecordings();
+  await loadNews();
+  await setupAudioRecording();
+}
+
+async function loadUserProfile() {
+  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  
+  // 1. Kontrola zablokování (Ban)
+  if (profile && profile.is_banned) {
+    alert('Tvůj účet byl zablokován (BAN). Pro více informací kontaktuj učitele.');
+    await logout();
+    return false;
+  }
+
+  // 2. Kontrola schválení účtu
+  if (profile && profile.role === 'student' && !profile.is_approved) {
+    alert('Tvůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrzení.');
+    await logout();
+    return false;
+  }
+
+  if (profile) {
+    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+    document.getElementById('stat-streak').innerText = profile.streak || 0;
+    document.getElementById('stat-stars').innerText = profile.stars || 0;
+  }
+  
+  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+  document.getElementById('stat-sent').innerText = count || 0;
+  return true;
+}
     async function renderCalendar() {
       const daysContainer = document.getElementById('calendar-days');
       const monthNameEl = document.getElementById('calendar-month-name');
@@ -358,31 +405,34 @@
       }
     }
 
-    async function loadLeaderboard() {
-      const box = document.getElementById('leaderboard-box');
-      
-      const { data: topStudents } = await db
-        .from('profiles')
-        .select('full_name, stars, streak')
-        .eq('role', 'student')
-        .order('streak', { ascending: false })
-        .order('stars', { ascending: false })
-        .limit(5);
+async function loadLeaderboard() {
+  const box = document.getElementById('leaderboard-box');
+  
+  // Načteme pouze schválené a NEZABANOVANÉ žáky
+  const { data: topStudents } = await db
+    .from('profiles')
+    .select('full_name, stars, streak, is_banned, is_approved')
+    .eq('role', 'student')
+    .eq('is_approved', true)           // Pouze schválení
+    .or('is_banned.is.null,is_banned.eq.false') // Pouze nezabanovaní
+    .order('streak', { ascending: false })
+    .order('stars', { ascending: false })
+    .limit(5);
 
-      if (!topStudents || topStudents.length === 0) {
-        box.innerHTML = '<em>Zatím bez dat.</em>';
-        return;
-      }
+  if (!topStudents || topStudents.length === 0) {
+    box.innerHTML = '<em>Zatím bez dat.</em>';
+    return;
+  }
 
-      box.innerHTML = '';
-      topStudents.forEach((s, idx) => {
-        const item = document.createElement('div');
-        item.className = 'leader-item';
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${"‎ ‎ " + (idx + 1) + "‎"}.`;
-        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
-        box.appendChild(item);
-      });
-    }
+  box.innerHTML = '';
+  topStudents.forEach((s, idx) => {
+    const item = document.createElement('div');
+    item.className = 'leader-item';
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${"‎ ‎ " + (idx + 1) + "‎"}.`;
+    item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
+    box.appendChild(item);
+  });
+}
 
     async function loadMyComments() {
       const box = document.getElementById('my-comments-box');
