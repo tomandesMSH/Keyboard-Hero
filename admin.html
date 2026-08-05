@@ -5,54 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero - Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-logic.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+
     :root {
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --primary-red: #ff3b30;
-      --primary-green: #2ecc71;
-      --primary-blue: #3498db;
-      --text-color: #2c3e50;
-      --border-color: #e2e8f0;
+      --bg-color: #0d0a20;
+      --card-bg: #1c1633;
+      --primary-red: #ff5c5c;
+      --primary-green: #7c5cff;
+      --primary-blue: #ff2ec4;
+      --gold-color: #ffd23f;
+      --text-color: #ffffff;
+      --text-muted: #a9acc9;
+      --border-color: #382a5c;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-color); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    h1, h2, .btn-primary, .btn-logout { font-weight: 800; }
+    body { background: linear-gradient(160deg, #1a1030 0%, #0d0a20 100%); color: var(--text-color); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     .container { width: 100%; max-width: 950px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-    h1 { font-size: 1.8rem; color: var(--primary-blue); }
-    .btn-logout { background: var(--primary-red); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    
-    .auth-card { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 400px; margin: 50px auto; border: 1px solid var(--border-color); }
-    .auth-card h2 { margin-bottom: 20px; text-align: center; }
-    .auth-input { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
-    .btn-primary { width: 100%; padding: 10px; background: var(--primary-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-primary-false { width: 100%; padding: 10px; background: var(--primary-green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    
-    .table-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
-    th { background-color: #f1f5f9; color: #475569; }
-    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px 25px; border-radius: 16px; border: 2px solid var(--border-color); }
+    h1 { font-size: 1.8rem; color: var(--gold-color); text-shadow: 0 0 12px rgba(255, 210, 63, 0.6); }
+    .btn-logout { background: var(--primary-red); color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 800; }
+
+    .auth-card { background: var(--card-bg); padding: 30px; border-radius: 18px; border: 2px solid var(--primary-blue); box-shadow: 0 0 30px rgba(255, 46, 196, 0.35); max-width: 400px; margin: 50px auto; }
+    .auth-card h2 { margin-bottom: 20px; text-align: center; color: var(--text-color); }
+    .auth-input { width: 100%; padding: 10px; margin: 8px 0 15px 0; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-color); }
+    .btn-primary { width: 100%; padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 0 16px rgba(255, 46, 196, 0.5); }
+    .btn-primary-false { width: 100%; padding: 12px; background: var(--primary-green); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 0 16px rgba(124, 92, 255, 0.5); }
+
+    .table-card { background: var(--card-bg); border-radius: 18px; padding: 20px; border: 2px solid var(--border-color); overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; color: var(--text-color); }
+    th, td { padding: 12px 15px; border-bottom: 2px solid var(--border-color); }
+    th { background-color: var(--bg-color); color: var(--text-muted); }
+
     .counter-control { display: flex; align-items: center; gap: 6px; }
-    .btn-step { width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-color); background: #e2e8f0; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; }
-    .btn-step:hover { background: #cbd5e1; }
-    .input-val { width: 45px; text-align: center; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; }
-    
-    .btn-save { background: var(--primary-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    .btn-audio { background: #8e44ad; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
-    .btn-delete { background: var(--primary-red); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-left: 8px; }
+    .btn-step { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--border-color); background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 800; display: flex; justify-content: center; align-items: center; }
+    .btn-step:hover { background: var(--border-color); }
+    .input-val { width: 45px; text-align: center; padding: 4px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 8px; color: var(--text-color); }
+
+    .btn-save { background: var(--primary-green); color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-weight: 800; }
+    .btn-audio { background: var(--gold-color); color: #1a1030; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.85rem; }
+    .btn-delete { background: var(--primary-red); color: white; border: none; padding: 4px 8px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.75rem; margin-left: 8px; }
 
     /* Panel nahrávek a komentářů */
-    .recordings-box { background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 8px; border: 1px solid #cbd5e1; }
-    .recording-item { padding: 10px 0; border-bottom: 1px dashed #cbd5e1; }
+    .recordings-box { background: var(--bg-color); padding: 15px; border-radius: 12px; margin-top: 8px; border: 1px solid var(--border-color); }
+    .recording-item { padding: 10px 0; border-bottom: 1px dashed var(--border-color); }
     .recording-item:last-child { border-bottom: none; }
     .recording-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .recording-date { font-size: 0.85rem; color: #64748b; font-weight: bold; }
-    
+    .recording-date { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
+
     .comment-box { display: flex; gap: 8px; margin-top: 8px; }
-    .comment-input { flex: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem; }
-    .btn-comment { background: var(--primary-blue); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+    .comment-input { flex: 1; padding: 6px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 0.85rem; }
+    .btn-comment { background: var(--primary-blue); color: white; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
 
     .hidden { display: none !important; }
   </style>
@@ -63,10 +69,10 @@
     
     <div id="admin-login" class="auth-card">
       <h2>Přihlášení Administrátora</h2>
-      <label style="font-size: 0.85rem; color: #666;">Uživatelské jméno:</label>
+      <label style="font-size: 0.85rem; color: var(--text-muted);">Uživatelské jméno:</label>
       <input type="text" id="admin-username" class="auth-input" placeholder="Administrátor">
       
-      <label style="font-size: 0.85rem; color: #666;">Heslo:</label>
+      <label style="font-size: 0.85rem; color: var(--text-muted);">Heslo:</label>
       <input type="password" id="admin-password" class="auth-input" placeholder="Heslo">
 
       <button class="btn-primary" onclick="loginAdmin()">Přihlásit se jako Administrátor</button>
@@ -84,20 +90,19 @@
       </header>
 
       <div class="table-card" id="pending-card" style="margin-bottom: 25px;">
-  
-  <h2 style="margin-bottom: 15px; color: #e67e22;">Čekající registrace</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Uživatel</th>
-        <th>Jméno</th>
-        <th>Akce</th>
-      </tr>
-    </thead>
-    <tbody id="pending-students-body">
-      </tbody>
-  </table>
-</div>
+        <h2 style="margin-bottom: 15px; color: var(--gold-color);">Čekající registrace</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Uživatel</th>
+              <th>Jméno</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="pending-students-body">
+            </tbody>
+        </table>
+      </div>
 
       <div class="table-card">
         <h2 style="margin-bottom: 15px;">Přehled žáků</h2>
@@ -108,6 +113,8 @@
               <th>Jméno</th>
               <th>🔥 Streak</th>
               <th>⭐ Koncert</th>
+              <th>Level</th>
+              <th>Odznaky</th>
               <th>Akce</th>
             </tr>
           </thead>
@@ -161,162 +168,177 @@
       if (session) checkAdminRole(session.user.id);
     }
 
-// Uprav funkčnost loadStudents tak, aby načítala jak schválené, tak neschválené žáky
-async function loadStudents() {
-  await loadPendingStudents();
-  await loadApprovedStudents();
-}
+    async function loadStudents() {
+      await loadPendingStudents();
+      await loadApprovedStudents();
+    }
 
-// Načtení čekajících žáků
-async function loadPendingStudents() {
-  const pendingBody = document.getElementById('pending-students-body');
-  pendingBody.innerHTML = '<tr><td colspan="3">Načítám žádosti...</td></tr>';
+    async function loadPendingStudents() {
+      const pendingBody = document.getElementById('pending-students-body');
+      pendingBody.innerHTML = '<tr><td colspan="3">Načítám žádosti...</td></tr>';
 
-  const { data: pending, error } = await db
-    .from('profiles')
-    .select('*')
-    .eq('role', 'student')
-    .eq('is_approved', false);
+      const { data: pending, error } = await db
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .eq('is_approved', false);
 
-  if (error || !pending || pending.length === 0) {
-    pendingBody.innerHTML = '<tr><td colspan="3"><em>Žádné nové registrace ke schválení.</em></td></tr>';
-    return;
-  }
+      if (error || !pending || pending.length === 0) {
+        pendingBody.innerHTML = '<tr><td colspan="3"><em>Žádné nové registrace ke schválení.</em></td></tr>';
+        return;
+      }
 
-  pendingBody.innerHTML = '';
-  pending.forEach(student => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><code>${student.username || '—'}</code></td>
-      <td><strong>${student.full_name || 'Bez jména'}</strong></td>
-      <td>
-        <button class="btn-save" style="background: var(--primary-green);" onclick="approveStudent('${student.id}')">✓ Schválit</button>
-        <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectStudent('${student.id}')">✕ Zamítnout</button>
-      </td>
-    `;
-    pendingBody.appendChild(tr);
-  });
-}
+      pendingBody.innerHTML = '';
+      pending.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${student.username || '—'}</code></td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <button class="btn-save" onclick="approveStudent('${student.id}')">✓ Schválit</button>
+            <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectStudent('${student.id}')">✕ Zamítnout</button>
+          </td>
+        `;
+        pendingBody.appendChild(tr);
+      });
+    }
 
-// Načtení schválených žáků
-// Načtení schválených žáků s tlačítkem Ban
-async function loadApprovedStudents() {
-  const tbody = document.getElementById('students-table-body');
-  tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
+    async function approveStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_approved: true }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při schvalování: ' + error.message);
+      } else {
+        alert('Žák byl úspěšně schválen!');
+        loadStudents();
+      }
+    }
 
-  const { data: students, error } = await db
-    .from('profiles')
-    .select('*')
-    .eq('role', 'student')
-    .eq('is_approved', true);
+    async function rejectStudent(studentId) {
+      if (!confirm('Opravdu chceš tuto registraci zamítnout a smazat?')) return;
 
-  if (error || !students || students.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5">Žádní schválení žáci nebyli nalezeni.</td></tr>';
-    return;
-  }
+      const { error } = await db.from('profiles').delete().eq('id', studentId);
+      if (error) {
+        alert('Chyba při mazání: ' + error.message);
+      } else {
+        alert('Žádost byla smazána.');
+        loadStudents();
+      }
+    }
 
-  tbody.innerHTML = '';
-  students.forEach(student => {
-    const isBanned = student.is_banned || false;
-    const tr = document.createElement('tr');
-    
-    // Pokud je uživatel zablokovaný, vizuálně ho odlišíme
-    if (isBanned) tr.style.opacity = '0.6';
+    async function banStudent(studentId) {
+      if (!confirm('Opravdu chceš tomuto žákovi udělit BAN? Nebude se moci přihlásit.')) return;
 
-    tr.innerHTML = `
-      <td>
-        <code>${student.username || '—'}</code>
-        ${isBanned ? ' <span style="color:red; font-weight:bold;">(BANNED)</span>' : ''}
-      </td>
-      <td><strong>${student.full_name || 'Bez jména'}</strong></td>
-      <td>
-        <div class="counter-control">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'streak', -1)">-</button>
-          <input type="number" id="streak-${student.id}" class="input-val" value="${student.streak || 0}">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'streak', 1)">+</button>
-        </div>
-      </td>
-      <td>
-        <div class="counter-control">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'stars', -1)">-</button>
-          <input type="number" id="stars-${student.id}" class="input-val" value="${student.stars || 0}">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
-        </div>
-      </td>
-      <td>
-        <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
-        <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
-        ${
-          isBanned 
-            ? `<button class="btn-save" style="background: #3498db; margin-left: 4px;" onclick="unbanStudent('${student.id}')">Unban</button>`
-            : `<button class="btn-delete" style="padding: 6px 10px; font-size: 0.8rem;" onclick="banStudent('${student.id}')">🚫 Ban</button>`
+      const { error } = await db.from('profiles').update({ is_banned: true }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při blokování: ' + error.message);
+      } else {
+        alert('Uživatel byl zablokován.');
+        loadApprovedStudents();
+      }
+    }
+
+    async function unbanStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_banned: false }).eq('id', studentId);
+      if (error) {
+        alert('Chyba při odblokování: ' + error.message);
+      } else {
+        alert('BAN byl zrušen.');
+        loadApprovedStudents();
+      }
+    }
+
+    async function loadApprovedStudents() {
+      const tbody = document.getElementById('students-table-body');
+      tbody.innerHTML = '<tr><td colspan="7">Načítám žáky...</td></tr>';
+
+      const { data: students, error } = await db.from('profiles').select('*').eq('role', 'student').eq('is_approved', true);
+
+      if (error || !students || students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">Žádní schválení žáci nebyli nalezeni.</td></tr>';
+        return;
+      }
+
+      // Each count promise handles its own failure so one bad request can't reject Promise.all
+      // (and so we don't rely on the supabase-js `throwOnError: false` default).
+      const counts = await Promise.all(students.map(s =>
+        db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', s.id)
+          .then(r => ({ count: (r && r.count) || 0 }))
+          .catch(() => ({ count: 0 }))
+      ));
+
+      tbody.innerHTML = '';
+      students.forEach((student, idx) => {
+        const totalRecordings = (counts[idx] && counts[idx].count) || 0;
+        // KHGame may be missing/broken — fall back per row so one failure can't blank the table.
+        let levelLabel = 'Level ?';
+        let badgeIcons = '—';
+        try {
+          const levelInfo = KHGame.computeLevel(student.stars || 0);
+          levelLabel = `Level ${levelInfo.level} · ${levelInfo.title}`;
+          const badges = KHGame.computeBadges({
+            stars: student.stars || 0,
+            streak: student.streak || 0,
+            totalRecordings: totalRecordings
+          });
+          // 'perfektni-tyden' is intentionally omitted here: the admin table has no per-student
+          // practice_logs date range, so this badge could never unlock and would be shown
+          // incorrectly (a student may legitimately see it unlocked on their own profile).
+          badgeIcons = badges.filter(b => b.unlocked && b.id !== 'perfektni-tyden').map(b => b.icon).join(' ') || '—';
+        } catch (err) {
+          console.warn('Level/badge computation failed for student', student.id, err);
         }
-      </td>
-    `;
 
-    const recTr = document.createElement('tr');
-    recTr.id = `rec-row-${student.id}`;
-    recTr.className = 'hidden';
-    recTr.innerHTML = `
-      <td colspan="5">
-        <div class="recordings-box" id="rec-box-${student.id}">
-          Načítám nahrávky...
-        </div>
-      </td>
-    `;
+        const isBanned = student.is_banned || false;
+        const tr = document.createElement('tr');
+        if (isBanned) tr.style.opacity = '0.6';
+        tr.innerHTML = `
+          <td>
+            <code>${student.username || '—'}</code>
+            ${isBanned ? ' <span style="color: var(--primary-red); font-weight: 800;">(BANNED)</span>' : ''}
+          </td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', -1)">-</button>
+              <input type="number" id="streak-${student.id}" class="input-val" value="${student.streak || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', 1)">+</button>
+            </div>
+          </td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', -1)">-</button>
+              <input type="number" id="stars-${student.id}" class="input-val" value="${student.stars || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
+            </div>
+          </td>
+          <td>${levelLabel}</td>
+          <td style="font-size: 1.1rem;">${badgeIcons}</td>
+          <td>
+            <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
+            <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
+            ${
+              isBanned
+                ? `<button class="btn-save" style="background: var(--primary-blue); margin-left: 4px;" onclick="unbanStudent('${student.id}')">Unban</button>`
+                : `<button class="btn-delete" style="padding: 6px 10px; font-size: 0.8rem;" onclick="banStudent('${student.id}')">🚫 Ban</button>`
+            }
+          </td>
+        `;
 
-    tbody.appendChild(tr);
-    tbody.appendChild(recTr);
-  });
-}
+        const recTr = document.createElement('tr');
+        recTr.id = `rec-row-${student.id}`;
+        recTr.className = 'hidden';
+        recTr.innerHTML = `
+          <td colspan="7">
+            <div class="recordings-box" id="rec-box-${student.id}">
+              Načítám nahrávky...
+            </div>
+          </td>
+        `;
 
-// Funkce pro udělení BANu
-async function banStudent(studentId) {
-  if (!confirm('Opravdu chceš tomuto žákovi udělit BAN? Nebude se moci přihlásit.')) return;
-
-  const { error } = await db.from('profiles').update({ is_banned: true }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při blokování: ' + error.message);
-  } else {
-    alert('Uživatel byl zablokován.');
-    loadApprovedStudents();
-  }
-}
-
-// Funkce pro zrušení BANu
-async function unbanStudent(studentId) {
-  const { error } = await db.from('profiles').update({ is_banned: false }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při odblokování: ' + error.message);
-  } else {
-    alert('BAN byl zrušen.');
-    loadApprovedStudents();
-  }
-}
-
-// Funkce pro schválení žáka
-async function approveStudent(studentId) {
-  const { error } = await db.from('profiles').update({ is_approved: true }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při schvalování: ' + error.message);
-  } else {
-    alert('Žák byl úspěšně schválen!');
-    loadStudents();
-  }
-}
-
-// Funkce pro zamítnutí/smazání registrace žáka
-async function rejectStudent(studentId) {
-  if (!confirm('Opravdu chceš tuto registraci zamítnout a smazat?')) return;
-  
-  const { error } = await db.from('profiles').delete().eq('id', studentId);
-  if (error) {
-    alert('Chyba při mazání: ' + error.message);
-  } else {
-    alert('Žádost byla smazána.');
-    loadStudents();
-  }
-}
+        tbody.appendChild(tr);
+        tbody.appendChild(recTr);
+      });
+    }
 
     async function toggleRecordings(studentId) {
       const recRow = document.getElementById(`rec-row-${studentId}`);
