@@ -72,11 +72,11 @@
     
     .auth-card { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 400px; margin: 50px auto; border: 1px solid var(--border-color); }
     .auth-card h2 { margin-bottom: 20px; text-align: center; }
-    .auth-input { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
+    .auth-input { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-color); color: var(--text-color); }
     .btn-primary { width: 100%; padding: 10px; background: var(--primary-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-primary-false { width: 100%; padding: 10px; background: var(--primary-green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-primary-false { width: 100%; padding: 10px; background: var(--primary-green); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     
-    .table-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; }
+    .table-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); overflow-x: auto; margin-bottom: 25px; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
     th { background-color: var(--th-bg); color: var(--th-text); }
@@ -90,7 +90,6 @@
     .btn-audio { background: var(--purple-accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
     .btn-delete { background: var(--primary-red); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-left: 8px; }
 
-    /* Panel nahrávek a komentářů */
     .recordings-box { background: var(--rec-box-bg); padding: 15px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--rec-box-border); }
     .recording-item { padding: 10px 0; border-bottom: 1px dashed var(--rec-box-border); }
     .recording-item:last-child { border-bottom: none; }
@@ -119,11 +118,7 @@
       <input type="password" id="admin-password" class="auth-input" placeholder="Heslo">
 
       <button class="btn-primary" onclick="loginAdmin()">Přihlásit se jako Administrátor</button>
-    <pre>
-    </pre>
-      <button class="btn-primary-false" onclick="window.location.href='index.html'">
-    Přihlásit se jako student
-</button>
+      <button class="btn-primary-false" onclick="window.location.href='index.html'">Přihlásit se jako student</button>
     </div>
 
     <div id="admin-dashboard" class="hidden">
@@ -132,21 +127,35 @@
         <button class="btn-logout" onclick="logoutAdmin()">Odhlásit se</button>
       </header>
 
-      <div class="table-card" id="pending-card" style="margin-bottom: 25px;">
-  
-  <h2 style="margin-bottom: 15px; color: var(--pending-heading);">Čekající registrace</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Uživatel</th>
-        <th>Jméno</th>
-        <th>Akce</th>
-      </tr>
-    </thead>
-    <tbody id="pending-students-body">
-      </tbody>
-  </table>
-</div>
+      <div class="table-card" id="reset-card">
+        <h2 style="margin-bottom: 15px; color: var(--primary-red);">🔑 Žádosti o reset hesla</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Uživatel</th>
+              <th>Jméno</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="reset-requests-body">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card" id="pending-card">
+        <h2 style="margin-bottom: 15px; color: var(--pending-heading);">Čekající registrace</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Uživatel</th>
+              <th>Jméno</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="pending-students-body">
+          </tbody>
+        </table>
+      </div>
 
       <div class="table-card">
         <h2 style="margin-bottom: 15px;">Přehled žáků</h2>
@@ -161,7 +170,7 @@
             </tr>
           </thead>
           <tbody id="students-table-body">
-            </tbody>
+          </tbody>
         </table>
       </div>
     </div>
@@ -198,7 +207,7 @@
       if (profile && profile.role === 'admin') {
         document.getElementById('admin-login').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
-        loadStudents();
+        loadDashboardData();
       } else {
         alert('Uživatel nemá administrátorská práva!');
         await db.auth.signOut();
@@ -210,162 +219,188 @@
       if (session) checkAdminRole(session.user.id);
     }
 
-// Uprav funkčnost loadStudents tak, aby načítala jak schválené, tak neschválené žáky
-async function loadStudents() {
-  await loadPendingStudents();
-  await loadApprovedStudents();
-}
+    async function loadDashboardData() {
+      await loadResetRequests();
+      await loadPendingStudents();
+      await loadApprovedStudents();
+    }
 
-// Načtení čekajících žáků
-async function loadPendingStudents() {
-  const pendingBody = document.getElementById('pending-students-body');
-  pendingBody.innerHTML = '<tr><td colspan="3">Načítám žádosti...</td></tr>';
+    // Načtení žádostí o reset hesla
+    async function loadResetRequests() {
+      const resetBody = document.getElementById('reset-requests-body');
+      resetBody.innerHTML = '<tr><td colspan="3">Načítám žádosti o reset...</td></tr>';
 
-  const { data: pending, error } = await db
-    .from('profiles')
-    .select('*')
-    .eq('role', 'student')
-    .eq('is_approved', false);
+      const { data: resets, error } = await db
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .eq('reset_requested', true);
 
-  if (error || !pending || pending.length === 0) {
-    pendingBody.innerHTML = '<tr><td colspan="3"><em>Žádné nové registrace ke schválení.</em></td></tr>';
-    return;
-  }
+      if (error || !resets || resets.length === 0) {
+        resetBody.innerHTML = '<tr><td colspan="3"><em>Žádné žádosti o reset hesla.</em></td></tr>';
+        return;
+      }
 
-  pendingBody.innerHTML = '';
-  pending.forEach(student => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><code>${student.username || '—'}</code></td>
-      <td><strong>${student.full_name || 'Bez jména'}</strong></td>
-      <td>
-        <button class="btn-save" style="background: var(--primary-green);" onclick="approveStudent('${student.id}')">✓ Schválit</button>
-        <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectStudent('${student.id}')">✕ Zamítnout</button>
-      </td>
-    `;
-    pendingBody.appendChild(tr);
-  });
-}
+      resetBody.innerHTML = '';
+      resets.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${student.username || '—'}</code></td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <button class="btn-save" style="background: var(--primary-green);" onclick="approvePasswordReset('${student.id}')">✓ Povolit reset</button>
+            <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectPasswordReset('${student.id}')">✕ Zamítnout</button>
+          </td>
+        `;
+        resetBody.appendChild(tr);
+      });
+    }
 
-// Načtení schválených žáků
-// Načtení schválených žáků s tlačítkem Ban
-async function loadApprovedStudents() {
-  const tbody = document.getElementById('students-table-body');
-  tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
+    async function approvePasswordReset(studentId) {
+      const { error } = await db.from('profiles').update({ reset_requested: false, reset_approved: true }).eq('id', studentId);
+      if (error) alert('Chyba: ' + error.message);
+      else {
+        alert('Reset hesla byl povolen. Žák bude vyzván k zadání nového hesla při dalším pokusu o přihlášení.');
+        loadResetRequests();
+      }
+    }
 
-  const { data: students, error } = await db
-    .from('profiles')
-    .select('*')
-    .eq('role', 'student')
-    .eq('is_approved', true);
+    async function rejectPasswordReset(studentId) {
+      const { error } = await db.from('profiles').update({ reset_requested: false, reset_approved: false }).eq('id', studentId);
+      if (error) alert('Chyba: ' + error.message);
+      else {
+        alert('Žádost o reset byla zamítnuta.');
+        loadResetRequests();
+      }
+    }
 
-  if (error || !students || students.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5">Žádní schválení žáci nebyli nalezeni.</td></tr>';
-    return;
-  }
+    // Načtení čekajících žáků
+    async function loadPendingStudents() {
+      const pendingBody = document.getElementById('pending-students-body');
+      pendingBody.innerHTML = '<tr><td colspan="3">Načítám žádosti...</td></tr>';
 
-  tbody.innerHTML = '';
-  students.forEach(student => {
-    const isBanned = student.is_banned || false;
-    const tr = document.createElement('tr');
-    
-    // Pokud je uživatel zablokovaný, vizuálně ho odlišíme
-    if (isBanned) tr.style.opacity = '0.6';
+      const { data: pending, error } = await db
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .eq('is_approved', false);
 
-    tr.innerHTML = `
-      <td>
-        <code>${student.username || '—'}</code>
-        ${isBanned ? ' <span style="color: var(--primary-red); font-weight:bold;">(BANNED)</span>' : ''}
-      </td>
-      <td><strong>${student.full_name || 'Bez jména'}</strong></td>
-      <td>
-        <div class="counter-control">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'streak', -1)">-</button>
-          <input type="number" id="streak-${student.id}" class="input-val" value="${student.streak || 0}">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'streak', 1)">+</button>
-        </div>
-      </td>
-      <td>
-        <div class="counter-control">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'stars', -1)">-</button>
-          <input type="number" id="stars-${student.id}" class="input-val" value="${student.stars || 0}">
-          <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
-        </div>
-      </td>
-      <td>
-        <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
-        <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
-        ${
-          isBanned 
-            ? `<button class="btn-save" style="background: var(--primary-blue); margin-left: 4px;" onclick="unbanStudent('${student.id}')">Unban</button>`
-            : `<button class="btn-delete" style="padding: 6px 10px; font-size: 0.8rem;" onclick="banStudent('${student.id}')">🚫 Ban</button>`
-        }
-      </td>
-    `;
+      if (error || !pending || pending.length === 0) {
+        pendingBody.innerHTML = '<tr><td colspan="3"><em>Žádné nové registrace ke schválení.</em></td></tr>';
+        return;
+      }
 
-    const recTr = document.createElement('tr');
-    recTr.id = `rec-row-${student.id}`;
-    recTr.className = 'hidden';
-    recTr.innerHTML = `
-      <td colspan="5">
-        <div class="recordings-box" id="rec-box-${student.id}">
-          Načítám nahrávky...
-        </div>
-      </td>
-    `;
+      pendingBody.innerHTML = '';
+      pending.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${student.username || '—'}</code></td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <button class="btn-save" style="background: var(--primary-green);" onclick="approveStudent('${student.id}')">✓ Schválit</button>
+            <button class="btn-delete" style="padding: 6px 12px; font-size: 0.85rem;" onclick="rejectStudent('${student.id}')">✕ Zamítnout</button>
+          </td>
+        `;
+        pendingBody.appendChild(tr);
+      });
+    }
 
-    tbody.appendChild(tr);
-    tbody.appendChild(recTr);
-  });
-}
+    // Načtení schválených žáků
+    async function loadApprovedStudents() {
+      const tbody = document.getElementById('students-table-body');
+      tbody.innerHTML = '<tr><td colspan="5">Načítám žáky...</td></tr>';
 
-// Funkce pro udělení BANu
-async function banStudent(studentId) {
-  if (!confirm('Opravdu chceš tomuto žákovi udělit BAN? Nebude se moci přihlásit.')) return;
+      const { data: students, error } = await db
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .eq('is_approved', true);
 
-  const { error } = await db.from('profiles').update({ is_banned: true }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při blokování: ' + error.message);
-  } else {
-    alert('Uživatel byl zablokován.');
-    loadApprovedStudents();
-  }
-}
+      if (error || !students || students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">Žádní schválení žáci nebyli nalezeni.</td></tr>';
+        return;
+      }
 
-// Funkce pro zrušení BANu
-async function unbanStudent(studentId) {
-  const { error } = await db.from('profiles').update({ is_banned: false }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při odblokování: ' + error.message);
-  } else {
-    alert('BAN byl zrušen.');
-    loadApprovedStudents();
-  }
-}
+      tbody.innerHTML = '';
+      students.forEach(student => {
+        const isBanned = student.is_banned || false;
+        const tr = document.createElement('tr');
+        
+        if (isBanned) tr.style.opacity = '0.6';
 
-// Funkce pro schválení žáka
-async function approveStudent(studentId) {
-  const { error } = await db.from('profiles').update({ is_approved: true }).eq('id', studentId);
-  if (error) {
-    alert('Chyba při schvalování: ' + error.message);
-  } else {
-    alert('Žák byl úspěšně schválen!');
-    loadStudents();
-  }
-}
+        tr.innerHTML = `
+          <td>
+            <code>${student.username || '—'}</code>
+            ${isBanned ? ' <span style="color: var(--primary-red); font-weight:bold;">(BANNED)</span>' : ''}
+          </td>
+          <td><strong>${student.full_name || 'Bez jména'}</strong></td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', -1)">-</button>
+              <input type="number" id="streak-${student.id}" class="input-val" value="${student.streak || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'streak', 1)">+</button>
+            </div>
+          </td>
+          <td>
+            <div class="counter-control">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', -1)">-</button>
+              <input type="number" id="stars-${student.id}" class="input-val" value="${student.stars || 0}">
+              <button class="btn-step" onclick="changeVal('${student.id}', 'stars', 1)">+</button>
+            </div>
+          </td>
+          <td>
+            <button class="btn-save" onclick="saveStudent('${student.id}')">Uložit</button>
+            <button class="btn-audio" onclick="toggleRecordings('${student.id}')">Nahrávky</button>
+            ${
+              isBanned 
+                ? `<button class="btn-save" style="background: var(--primary-blue); margin-left: 4px;" onclick="unbanStudent('${student.id}')">Unban</button>`
+                : `<button class="btn-delete" style="padding: 6px 10px; font-size: 0.8rem;" onclick="banStudent('${student.id}')">🚫 Ban</button>`
+            }
+          </td>
+        `;
 
-// Funkce pro zamítnutí/smazání registrace žáka
-async function rejectStudent(studentId) {
-  if (!confirm('Opravdu chceš tuto registraci zamítnout a smazat?')) return;
-  
-  const { error } = await db.from('profiles').delete().eq('id', studentId);
-  if (error) {
-    alert('Chyba při mazání: ' + error.message);
-  } else {
-    alert('Žádost byla smazána.');
-    loadStudents();
-  }
-}
+        const recTr = document.createElement('tr');
+        recTr.id = `rec-row-${student.id}`;
+        recTr.className = 'hidden';
+        recTr.innerHTML = `
+          <td colspan="5">
+            <div class="recordings-box" id="rec-box-${student.id}">
+              Načítám nahrávky...
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+        tbody.appendChild(recTr);
+      });
+    }
+
+    async function banStudent(studentId) {
+      if (!confirm('Opravdu chceš tomuto žákovi udělit BAN? Nebude se moci přihlásit.')) return;
+
+      const { error } = await db.from('profiles').update({ is_banned: true }).eq('id', studentId);
+      if (error) alert('Chyba při blokování: ' + error.message);
+      else { alert('Uživatel byl zablokován.'); loadApprovedStudents(); }
+    }
+
+    async function unbanStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_banned: false }).eq('id', studentId);
+      if (error) alert('Chyba při odblokování: ' + error.message);
+      else { alert('BAN byl zrušen.'); loadApprovedStudents(); }
+    }
+
+    async function approveStudent(studentId) {
+      const { error } = await db.from('profiles').update({ is_approved: true }).eq('id', studentId);
+      if (error) alert('Chyba při schvalování: ' + error.message);
+      else { alert('Žák byl úspěšně schválen!'); loadDashboardData(); }
+    }
+
+    async function rejectStudent(studentId) {
+      if (!confirm('Opravdu chceš tuto registraci zamítnout a smazat?')) return;
+      const { error } = await db.from('profiles').delete().eq('id', studentId);
+      if (error) alert('Chyba při mazání: ' + error.message);
+      else { alert('Žádost byla smazána.'); loadDashboardData(); }
+    }
 
     async function toggleRecordings(studentId) {
       const recRow = document.getElementById(`rec-row-${studentId}`);
@@ -416,10 +451,7 @@ async function rejectStudent(studentId) {
       const commentInput = document.getElementById(`comment-input-${logId}`);
       const text = commentInput.value;
 
-      const { error } = await db
-        .from('practice_logs')
-        .update({ teacher_comment: text })
-        .eq('id', logId);
+      const { error } = await db.from('practice_logs').update({ teacher_comment: text }).eq('id', logId);
 
       if (error) alert('Chyba uložení: ' + error.message);
       else alert('Komentář byl uložen!');
@@ -428,17 +460,14 @@ async function rejectStudent(studentId) {
     async function deleteRecording(logId, audioUrl, studentId) {
       if (!confirm('Opravdu chceš tuto nahrávku trvale smazat?')) return;
 
-      // 1. Smazání z DB
       const { error: dbErr } = await db.from('practice_logs').delete().eq('id', logId);
       if (dbErr) return alert('Chyba při mazání z DB: ' + dbErr.message);
 
-      // 2. Smazání ze Storage
       if (audioUrl) {
         const path = audioUrl.split('/recordings/')[1];
         if (path) await db.storage.from('recordings').remove([path]);
       }
 
-      // Obnovíme rozbalený panel
       document.getElementById(`rec-row-${studentId}`).classList.add('hidden');
       toggleRecordings(studentId);
     }
@@ -463,7 +492,6 @@ async function rejectStudent(studentId) {
       location.reload();
     }
 
-    /* Přepínání světlého / tmavého režimu */
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.getAttribute('data-theme') === 'dark';

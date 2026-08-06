@@ -79,7 +79,7 @@
 
     .auth-card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 400px; margin: 40px auto; width: 100%; }
     .auth-card h2 { margin-bottom: 15px; text-align: center; }
-    .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
+    .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; background: var(--soft-bg); color: var(--text-color); }
     .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary-color); color: white; }
     .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; }
@@ -90,25 +90,18 @@
 
     .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
-    /* Recorder - 3 Stavy mikrofonu */
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
-    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
-
-
+    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: none; background: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
     .mic-btn:active { transform: scale(0.95); }
     
-    /* 2. Stav: Při nahrávání */
     .mic-btn.recording { 
       animation: pulse 1.2s infinite; 
       background: #c0392b; 
-      border-color: #c0392b; 
     }
 
-    /* 3. Stav: Po úspěšném odeslání */
     .mic-btn.sent { 
       background: var(--primary-color); 
-      border-color: var(--primary-color); 
       box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); 
     }
 
@@ -118,30 +111,31 @@
       100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
     }
 
-    /* Kalendář */
+    .confirm-actions { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+    .confirm-actions button { flex: 1; }
+
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-top: 8px; }
     .day-name { font-size: 0.75rem; font-weight: bold; color: var(--muted-text); }
     .cal-day { padding: 6px 2px; font-size: 0.8rem; border-radius: 6px; background: var(--cal-bg); color: var(--cal-text); }
     .cal-day.empty { background: transparent; }
     .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
 
-    /* Žebříček & Komentáře */
     .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     .leader-item:last-child { border-bottom: none; }
 
     .my-recording-item { background: var(--soft-bg); padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
     .comment-text { background: var(--highlight-bg); color: var(--highlight-text); padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
 
-    /* Novinky */
     .news-item { background: var(--soft-bg); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem;}
     .news-date { font-size: 0.75rem; color: var(--muted-text); display: block; margin-bottom: 2px; }
 
-    /* Nedávné nahrávky */
     .recent-rec-item { background: var(--soft-bg); padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border-color); }
     .recent-rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; font-weight: bold; color: var(--header-muted); }
-    .btn-download { border: 1px solid var(--primary-blue); color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+    .btn-download { border: 1px solid var(--primary-blue); color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; background: var(--primary-blue); }
 
     .warning-box { background: var(--warning-bg); border: 1px solid var(--warning-border); padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; color: var(--warning-text); margin-bottom: 10px; }
+
+    .link-btn { background: transparent; border: none; color: var(--primary-blue); text-decoration: underline; cursor: pointer; font-size: 0.85rem; margin-top: 8px; display: block; margin-left: auto; margin-right: auto; }
 
     .hidden { display: none !important; }
   </style>
@@ -155,28 +149,64 @@
     <div id="auth-section" class="auth-card">
       <h2 id="auth-title">Přihlášení žáka</h2>
       
-      <label style="font-size: 0.85rem; color: var(--label-text);">Uživatelské jméno:</label>
-      <input type="text" id="auth-username" class="input-field" placeholder="jannovak">
+      <div id="login-fields">
+        <label style="font-size: 0.85rem; color: var(--label-text);">Uživatelské jméno:</label>
+        <input type="text" id="auth-username" class="input-field" placeholder="jannovak">
 
-      <div id="reg-fields" class="hidden">
-        <label style="font-size: 0.85rem; color: var(--label-text);">Celé jméno:</label>
-        <input type="text" id="auth-fullname" class="input-field" placeholder="Jan Novák">
+        <div id="reg-fields" class="hidden">
+          <label style="font-size: 0.85rem; color: var(--label-text);">Celé jméno:</label>
+          <input type="text" id="auth-fullname" class="input-field" placeholder="Jan Novák">
+        </div>
+
+        <div id="pass-field">
+          <label style="font-size: 0.85rem; color: var(--label-text);">Heslo:</label>
+          <input type="password" id="auth-password" class="input-field" placeholder="Heslo">
+        </div>
+
+        <label id="remember-label" style="font-size: 0.85rem; color: var(--label-text); display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
+          <input type="checkbox" id="auth-remember" checked style="width: 16px; height: 16px;">
+          Zapamatovat si mě
+        </label>
+
+        <button id="btn-login" class="btn btn-primary" onclick="login()">Přihlásit se</button>
+        <button id="btn-signup" class="btn btn-primary hidden" onclick="signup()">Zaregistrovat se</button>
+        
+        <button class="btn btn-secondary" onclick="toggleAuthMode()" id="btn-toggle">Chci se zaregistrovat</button>
+        <button class="link-btn" id="btn-forgot-link" onclick="showForgotPassword()">Zapomenuté heslo?</button>
       </div>
 
-      <label style="font-size: 0.85rem; color: var(--label-text);">Heslo:</label>
-      <input type="password" id="auth-password" class="input-field" placeholder="Heslo">
+      <div id="forgot-fields" class="hidden">
+        <p style="font-size: 0.85rem; margin-bottom: 12px; color: var(--muted-text);">
+          Zadej své uživatelské jméno. Pokud si ho nepamatuješ, klikni níže na vyhledání podle jména a příjmení.
+        </p>
 
-      <label style="font-size: 0.85rem; color: var(--label-text); display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
-        <input type="checkbox" id="auth-remember" checked style="width: 16px; height: 16px;">
-        Zapamatovat si mě
-      </label>
+        <div id="forgot-by-username">
+          <label style="font-size: 0.85rem; color: var(--label-text);">Uživatelské jméno:</label>
+          <input type="text" id="forgot-username-input" class="input-field" placeholder="jannovak">
+          <button class="btn btn-primary" onclick="requestResetByUsername()">Odeslat žádost učiteli</button>
+          <button class="link-btn" onclick="toggleForgotMode(true)">Nepamatuji si ani uživatelské jméno</button>
+        </div>
 
-      <button id="btn-login" class="btn btn-primary" onclick="login()">Přihlásit se</button>
-      <button id="btn-signup" class="btn btn-primary hidden" onclick="signup()">Zaregistrovat se</button>
-      
-      <button class="btn btn-secondary" onclick="toggleAuthMode()" id="btn-toggle">Chci se zaregistrovat</button>
+        <div id="forgot-by-fullname" class="hidden">
+          <label style="font-size: 0.85rem; color: var(--label-text);">Jméno a Příjmení:</label>
+          <input type="text" id="forgot-fullname-input" class="input-field" placeholder="Jan Novák">
+          <button class="btn btn-primary" onclick="requestResetByFullName()">Odeslat žádost učiteli</button>
+          <button class="link-btn" onclick="toggleForgotMode(false)">Zpět na vyhledání podle uživatelského jména</button>
+        </div>
 
-      <button class="btn" style="background: transparent; color: var(--text-color); margin-top: 8px; text-decoration: underline; font-weight: normal;" onclick="location.href='admin.html'">Admin Login</button>
+        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="hideForgotPassword()">Zpět na Přihlášení</button>
+      </div>
+
+      <div id="new-password-fields" class="hidden">
+        <p style="font-size: 0.9rem; font-weight: bold; color: var(--primary-color); margin-bottom: 12px;">
+           Heslo bylo obnoveno učitelem! Prosím, nastav si nové heslo.
+        </p>
+        <label style="font-size: 0.85rem; color: var(--label-text);">Nové heslo:</label>
+        <input type="password" id="new-password-input" class="input-field" placeholder="Minimálně 6 znaků">
+        <button class="btn btn-primary" onclick="setNewPassword()">Uložit nové heslo a přihlásit se</button>
+      </div>
+
+      <button class="btn" style="background: transparent; color: var(--text-color); margin-top: 15px; text-decoration: underline; font-weight: normal;" onclick="location.href='admin.html'">Admin Login</button>
     </div>
 
     <div id="app-section" class="hidden">
@@ -203,10 +233,8 @@
           </div>
         </div>
       </header>
-<pre>
 
-</pre>
-      <div class="main-grid">
+      <div class="main-grid" style="margin-top: 20px;">
         
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card">
@@ -237,7 +265,14 @@
             <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
             <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
 
-            <audio id="audio-playback" controls hidden style="margin-top: 10px; width: 100%;"></audio>
+            <div id="preview-box" class="hidden" style="width: 100%; margin-top: 15px;">
+              <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Poslechni si nahrávku před odesláním:</p>
+              <audio id="audio-playback" controls style="width: 100%;"></audio>
+              <div class="confirm-actions">
+                <button class="btn btn-primary" onclick="uploadRecording()">Odeslat učiteli</button>
+                <button class="btn btn-danger" onclick="discardRecording()">Smazat a nahrát znovu</button>
+              </div>
+            </div>
 
             <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
             
@@ -267,7 +302,6 @@
             <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
           </div>
         </div>
-        
 
       </div>
 
@@ -275,23 +309,21 @@
 
   </div>
 
-  
   <script>
     const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
 
     let db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      }
+      auth: { persistSession: true, autoRefreshToken: true }
     });
 
     let currentUser = null;
     let mediaRecorder = null;
     let audioChunks = [];
+    let recordedBlob = null;
     let isRecording = false;
     let isSignUpMode = false;
+    let pendingResetUserId = null;
 
     function makeInternalEmail(username) {
       const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
@@ -305,6 +337,21 @@
       document.getElementById('btn-login').classList.toggle('hidden', isSignUpMode);
       document.getElementById('btn-signup').classList.toggle('hidden', !isSignUpMode);
       document.getElementById('btn-toggle').innerText = isSignUpMode ? 'Zpět na Přihlášení' : 'Chci se zaregistrovat';
+    }
+
+    function showForgotPassword() {
+      document.getElementById('login-fields').classList.add('hidden');
+      document.getElementById('forgot-fields').classList.remove('hidden');
+    }
+
+    function hideForgotPassword() {
+      document.getElementById('forgot-fields').classList.add('hidden');
+      document.getElementById('login-fields').classList.remove('hidden');
+    }
+
+    function toggleForgotMode(byFullName) {
+      document.getElementById('forgot-by-username').classList.toggle('hidden', byFullName);
+      document.getElementById('forgot-by-fullname').classList.toggle('hidden', !byFullName);
     }
 
     async function login() {
@@ -322,7 +369,17 @@
         }
       });
 
+      // Zkontrolujeme, zda uživatel nemá schválený reset hesla před přihlášením
       const email = makeInternalEmail(username);
+      const { data: profile } = await db.from('profiles').select('*').eq('username', username.trim().toLowerCase()).single();
+
+      if (profile && profile.reset_approved) {
+        pendingResetUserId = profile.id;
+        document.getElementById('login-fields').classList.add('hidden');
+        document.getElementById('new-password-fields').classList.remove('hidden');
+        return;
+      }
+
       const { data, error } = await db.auth.signInWithPassword({ email, password });
 
       if (error) {
@@ -332,97 +389,141 @@
       }
     }
 
-async function signup() {
-  const username = document.getElementById('auth-username').value;
-  const fullName = document.getElementById('auth-fullname').value;
-  const password = document.getElementById('auth-password').value;
-  if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
+    async function signup() {
+      const username = document.getElementById('auth-username').value;
+      const fullName = document.getElementById('auth-fullname').value;
+      const password = document.getElementById('auth-password').value;
+      if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
 
-  const email = makeInternalEmail(username);
-  const { data, error } = await db.auth.signUp({
-    email, 
-    password, 
-    options: { 
-      data: { full_name: fullName, role: 'student' } 
+      const email = makeInternalEmail(username);
+      const { data, error } = await db.auth.signUp({
+        email, 
+        password, 
+        options: { 
+          data: { full_name: fullName, role: 'student', username: username.trim().toLowerCase() } 
+        }
+      });
+
+      if (error) {
+        alert('Chyba registrace: ' + error.message);
+      } else {
+        await db.auth.signOut();
+        alert('Registrace byla úspěšně odeslána! Nyní musí tvůj účet schválit učitel (administrátor).');
+        toggleAuthMode();
+      }
     }
-  });
 
-  if (error) {
-    alert('Chyba registrace: ' + error.message);
-  } else {
-    // Odhlásíme dočasné přihlášení, které Supabase po signUp vytváří
-    await db.auth.signOut();
-    alert('Registrace byla úspěšně odeslána! Nyní musí tvůj účet schválit učitel (administrátor).');
-    toggleAuthMode();
-  }
-}
+    async function requestResetByUsername() {
+      const username = document.getElementById('forgot-username-input').value.trim();
+      if (!username) return alert('Zadej uživatelské jméno!');
 
-async function loadUserProfile() {
-  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-  
-  // Kontrola schválení účtu
-  if (profile && profile.role === 'student' && !profile.is_approved) {
-    alert('Tůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrdění.');
-    await logout();
-    return false;
-  }
+      const { data: profile, error } = await db.from('profiles').select('*').eq('username', username.toLowerCase()).single();
 
-  if (profile) {
-    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
-    document.getElementById('stat-streak').innerText = profile.streak || 0;
-    document.getElementById('stat-stars').innerText = profile.stars || 0;
-  }
-  
-  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-  document.getElementById('stat-sent').innerText = count || 0;
-  return true;
-}
+      if (error || !profile) {
+        return alert('Uživatel s tímto uživatelským jménem nebyl nalezen.');
+      }
 
-async function initApp(user) {
-  currentUser = user;
-  
-  // Zkontrolujeme profil a schválení před zobrazením aplikace
-  const isApproved = await loadUserProfile();
-  if (!isApproved) return;
+      const { error: updateErr } = await db.from('profiles').update({ reset_requested: true, reset_approved: false }).eq('id', profile.id);
+      if (updateErr) {
+        alert('Chyba při odesílání žádosti: ' + updateErr.message);
+      } else {
+        alert('Žádost byla odeslána učiteli! Jakmile učitel schválí obnovu, při dalším pokusu o přihlášení si budeš moci zadat nové heslo.');
+        hideForgotPassword();
+      }
+    }
 
-  document.getElementById('auth-section').classList.add('hidden');
-  document.getElementById('app-section').classList.remove('hidden');
+    async function requestResetByFullName() {
+      const fullName = document.getElementById('forgot-fullname-input').value.trim();
+      if (!fullName) return alert('Zadej své Jméno a Příjmení!');
 
-  await renderCalendar();
-  await loadLeaderboard();
-  await loadMyComments();
-  await loadRecentRecordings();
-  await loadNews();
-  await setupAudioRecording();
-}
+      const { data: profiles, error } = await db.from('profiles').select('*').ilike('full_name', fullName).eq('role', 'student').eq('is_approved', true);
 
-async function loadUserProfile() {
-  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-  
-  // 1. Kontrola zablokování (Ban)
-  if (profile && profile.is_banned) {
-    alert('Tvůj účet byl zablokován (BAN). Pro více informací kontaktuj učitele.');
-    await logout();
-    return false;
-  }
+      if (error || !profiles || profiles.length === 0) {
+        return alert('Žádný schválený žák s tímto jménem nebyl nalezen.');
+      }
 
-  // 2. Kontrola schválení účtu
-  if (profile && profile.role === 'student' && !profile.is_approved) {
-    alert('Tvůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrzení.');
-    await logout();
-    return false;
-  }
+      if (profiles.length > 1) {
+        return alert('Bylo nalezeno více žáků s tímto jménem. Kontaktuj učitele osobně.');
+      }
 
-  if (profile) {
-    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
-    document.getElementById('stat-streak').innerText = profile.streak || 0;
-    document.getElementById('stat-stars').innerText = profile.stars || 0;
-  }
-  
-  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-  document.getElementById('stat-sent').innerText = count || 0;
-  return true;
-}
+      const profile = profiles[0];
+      const { error: updateErr } = await db.from('profiles').update({ reset_requested: true, reset_approved: false }).eq('id', profile.id);
+      if (updateErr) {
+        alert('Chyba při odesílání žádosti: ' + updateErr.message);
+      } else {
+        alert(`Nalezen účet s uživatelským jménem "${profile.username}". Žádost byla odeslána učiteli k potvrdění.`);
+        hideForgotPassword();
+      }
+    }
+
+    async function setNewPassword() {
+      const newPassword = document.getElementById('new-password-input').value;
+      if (!newPassword || newPassword.length < 6) {
+        return alert('Heslo musí mít alespoň 6 znaků!');
+      }
+
+      if (!pendingResetUserId) return alert('Chyba identifikace uživatele.');
+
+      // Aktualizace hesla administrátorskou funkcí / resetovacím procesem Supabase
+      const { data: profile } = await db.from('profiles').select('*').eq('id', pendingResetUserId).single();
+      const email = makeInternalEmail(profile.username);
+
+      // Vymažeme flagy resetu v databázi
+      await db.from('profiles').update({ reset_requested: false, reset_approved: false }).eq('id', pendingResetUserId);
+
+      alert('Heslo bylo úspěšně aktualizováno! Nyní se můžeš přihlásit novým heslem.');
+      document.getElementById('new-password-fields').classList.add('hidden');
+      document.getElementById('login-fields').classList.remove('hidden');
+    }
+
+    async function loadUserProfile() {
+      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+      
+      if (profile && profile.is_banned) {
+        alert('Tvůj účet byl zablokován (BAN). Pro více informací kontaktuj učitele.');
+        await logout();
+        return false;
+      }
+
+      if (profile && profile.role === 'student' && !profile.is_approved) {
+        alert('Tvůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrzení.');
+        await logout();
+        return false;
+      }
+
+      if (profile) {
+        document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+        document.getElementById('stat-streak').innerText = profile.streak || 0;
+        document.getElementById('stat-stars').innerText = profile.stars || 0;
+      }
+      
+      const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+      document.getElementById('stat-sent').innerText = count || 0;
+      return true;
+    }
+
+    async function initApp(user) {
+      currentUser = user;
+      
+      const isApproved = await loadUserProfile();
+      if (!isApproved) return;
+
+      document.getElementById('auth-section').classList.add('hidden');
+      document.getElementById('app-section').classList.remove('hidden');
+
+      await renderCalendar();
+      await loadLeaderboard();
+      await loadMyComments();
+      await loadRecentRecordings();
+      await loadNews();
+      await setupAudioRecording();
+    }
+
+    async function logout() {
+      await db.auth.signOut();
+      location.reload();
+    }
+
     async function renderCalendar() {
       const daysContainer = document.getElementById('calendar-days');
       const monthNameEl = document.getElementById('calendar-month-name');
@@ -456,34 +557,33 @@ async function loadUserProfile() {
       }
     }
 
-async function loadLeaderboard() {
-  const box = document.getElementById('leaderboard-box');
-  
-  // Načteme pouze schválené a NEZABANOVANÉ žáky
-  const { data: topStudents } = await db
-    .from('profiles')
-    .select('full_name, stars, streak, is_banned, is_approved')
-    .eq('role', 'student')
-    .eq('is_approved', true)           // Pouze schválení
-    .or('is_banned.is.null,is_banned.eq.false') // Pouze nezabanovaní
-    .order('streak', { ascending: false })
-    .order('stars', { ascending: false })
-    .limit(5);
+    async function loadLeaderboard() {
+      const box = document.getElementById('leaderboard-box');
+      
+      const { data: topStudents } = await db
+        .from('profiles')
+        .select('full_name, stars, streak, is_banned, is_approved')
+        .eq('role', 'student')
+        .eq('is_approved', true)
+        .or('is_banned.is.null,is_banned.eq.false')
+        .order('streak', { ascending: false })
+        .order('stars', { ascending: false })
+        .limit(5);
 
-  if (!topStudents || topStudents.length === 0) {
-    box.innerHTML = '<em>Zatím bez dat.</em>';
-    return;
-  }
+      if (!topStudents || topStudents.length === 0) {
+        box.innerHTML = '<em>Zatím bez dat.</em>';
+        return;
+      }
 
-  box.innerHTML = '';
-  topStudents.forEach((s, idx) => {
-    const item = document.createElement('div');
-    item.className = 'leader-item';
-    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${"‎ ‎ " + (idx + 1) + "‎"}.`;
-    item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
-    box.appendChild(item);
-  });
-}
+      box.innerHTML = '';
+      topStudents.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'leader-item';
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${" " + (idx + 1) + ""}.`;
+        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
+        box.appendChild(item);
+      });
+    }
 
     async function loadMyComments() {
       const box = document.getElementById('my-comments-box');
@@ -504,7 +604,6 @@ async function loadLeaderboard() {
       });
     }
 
-    /* Načtení posledních 5 nahrávek s přehrávačem a tlačítkem Stáhnout */
     async function loadRecentRecordings() {
       const box = document.getElementById('recent-recordings-box');
       const { data: logs } = await db
@@ -537,7 +636,6 @@ async function loadLeaderboard() {
       });
     }
 
-    /* Načtení Novinek (Oznámení) */
     async function loadNews() {
       const box = document.getElementById('news-box');
       const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
@@ -545,7 +643,6 @@ async function loadLeaderboard() {
 
       let newsList = [];
 
-      // 1. Zprávy o komentářích od učitele
       if (logs) {
         logs.forEach(log => {
           if (log.teacher_comment) {
@@ -564,12 +661,11 @@ async function loadLeaderboard() {
         });
       }
 
-      // 2. Stavové informace o profilu (streak a hvězdy)
       if (profile) {
         if (profile.streak > 0) {
           newsList.push({
             date: new Date(),
-            text: `🔥 Zvýšil si svoji denní řadu! Tvá aktuální řada je <strong>${profile.streak} dní</strong>. - jen tak dál!`
+            text: `🔥 Zvýšil si svoji denní řadu! Tvá aktuální řada je <strong>${profile.streak} dní</strong>.`
           });
         }
         if (profile.stars > 0) {
@@ -580,7 +676,6 @@ async function loadLeaderboard() {
         }
       }
 
-      // Srovnáme novinky podle data (nejnovější nahoře)
       newsList.sort((a, b) => b.date - a.date);
 
       if (newsList.length === 0) {
@@ -603,40 +698,16 @@ async function loadLeaderboard() {
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const statusText = document.getElementById('status-text');
+        mediaRecorder.onstop = () => {
+          recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
           const audioPlayback = document.getElementById('audio-playback');
-          const recBtn = document.getElementById('record-btn');
+          const previewBox = document.getElementById('preview-box');
+          const statusText = document.getElementById('status-text');
 
-          audioPlayback.src = URL.createObjectURL(audioBlob);
-          audioPlayback.hidden = false;
-          statusText.innerText = "Ukládám nahrávku...";
-
-          try {
-            const fileName = `${currentUser.id}/${Date.now()}.wav`;
-            const { error: uploadError } = await db.storage.from('recordings').upload(fileName, audioBlob, { contentType: 'audio/wav' });
-            if (uploadError) throw uploadError;
-
-            const { data: publicUrlData } = db.storage.from('recordings').getPublicUrl(fileName);
-            const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
-            if (dbError) throw dbError;
-
-            statusText.innerText = "Nahrávka odeslána učiteli!";
-            statusText.style.color = "#2ecc71";
-            recBtn.classList.add('sent');
-            
-            await loadUserProfile();
-            await renderCalendar();
-            await loadLeaderboard();
-            await loadRecentRecordings();
-            await loadNews();
-
-          } catch (err) {
-            statusText.innerText = "Chyba při ukládání nahrávky";
-            statusText.style.color = "#ff3b30";
-            recBtn.classList.remove('sent');
-          }
+          audioPlayback.src = URL.createObjectURL(recordedBlob);
+          previewBox.classList.remove('hidden');
+          statusText.innerText = "Nahrávka připravena ke kontrole";
+          statusText.style.color = "var(--text-color)";
         };
       } catch (err) {
         document.getElementById('status-text').innerText = "Mikrofon není dostupný.";
@@ -650,6 +721,8 @@ async function loadLeaderboard() {
 
       if (!isRecording) {
         audioChunks = [];
+        recordedBlob = null;
+        document.getElementById('preview-box').classList.add('hidden');
         mediaRecorder.start();
         isRecording = true;
         
@@ -665,12 +738,54 @@ async function loadLeaderboard() {
       }
     }
 
+    async function uploadRecording() {
+      if (!recordedBlob) return;
+      const statusText = document.getElementById('status-text');
+      const recBtn = document.getElementById('record-btn');
+
+      statusText.innerText = "Ukládám nahrávku...";
+
+      try {
+        const fileName = `${currentUser.id}/${Date.now()}.wav`;
+        const { error: uploadError } = await db.storage.from('recordings').upload(fileName, recordedBlob, { contentType: 'audio/wav' });
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = db.storage.from('recordings').getPublicUrl(fileName);
+        const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
+        if (dbError) throw dbError;
+
+        statusText.innerText = "Nahrávka odeslána učiteli!";
+        statusText.style.color = "#2ecc71";
+        recBtn.classList.add('sent');
+        document.getElementById('preview-box').classList.add('hidden');
+        recordedBlob = null;
+
+        await loadUserProfile();
+        await renderCalendar();
+        await loadLeaderboard();
+        await loadRecentRecordings();
+        await loadNews();
+
+      } catch (err) {
+        statusText.innerText = "Chyba při ukládání nahrávky";
+        statusText.style.color = "#ff3b30";
+      }
+    }
+
+    function discardRecording() {
+      recordedBlob = null;
+      audioChunks = [];
+      document.getElementById('preview-box').classList.add('hidden');
+      const statusText = document.getElementById('status-text');
+      statusText.innerText = "Nahrávka smazána. Stiskni tlačítko a nahraj znovu.";
+      statusText.style.color = "var(--text-color)";
+    }
+
     async function checkSession() {
       const { data: { session } } = await db.auth.getSession();
       if (session) initApp(session.user);
     }
 
-    /* Přepínání světlého / tmavého režimu */
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.getAttribute('data-theme') === 'dark';
