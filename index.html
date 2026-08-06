@@ -92,16 +92,20 @@
 
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
-    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: none; background: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+
+
     .mic-btn:active { transform: scale(0.95); }
     
     .mic-btn.recording { 
       animation: pulse 1.2s infinite; 
       background: #c0392b; 
+      border-color: #c0392b; 
     }
 
     .mic-btn.sent { 
       background: var(--primary-color); 
+      border-color: var(--primary-color); 
       box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); 
     }
 
@@ -109,6 +113,24 @@
       0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
       70% { box-shadow: 0 0 0 20px rgba(255, 59, 48, 0); }
       100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+    }
+
+    /* Tlačítko pro nahrání souboru */
+    .file-upload-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: var(--soft-bg);
+      border: 1px dashed var(--primary-blue);
+      color: var(--primary-blue);
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .file-upload-btn:hover {
+      background: var(--highlight-bg);
     }
 
     .confirm-actions { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
@@ -262,15 +284,21 @@
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card recorder-card">
             <h3>Nahrávání Cvičení</h3>
+            
             <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
             <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
+
+            <label class="file-upload-btn">
+              📁 Vybrat soubor z zařízení (.mp3, .wav...)
+              <input type="file" id="audio-file-input" accept="audio/*,.mp3,.wav,.m4a,.ogg" style="display: none;" onchange="handleFileSelect(event)">
+            </label>
 
             <div id="preview-box" class="hidden" style="width: 100%; margin-top: 15px;">
               <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Poslechni si nahrávku před odesláním:</p>
               <audio id="audio-playback" controls style="width: 100%;"></audio>
               <div class="confirm-actions">
                 <button class="btn btn-primary" onclick="uploadRecording()">Odeslat učiteli</button>
-                <button class="btn btn-danger" onclick="discardRecording()">Smazat a nahrát znovu</button>
+                <button class="btn btn-danger" onclick="discardRecording()">Smazat a vybrat znovu</button>
               </div>
             </div>
 
@@ -321,6 +349,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let recordedBlob = null;
+    let selectedFileType = 'audio/wav';
     let isRecording = false;
     let isSignUpMode = false;
     let pendingResetUserId = null;
@@ -369,7 +398,6 @@
         }
       });
 
-      // Zkontrolujeme, zda uživatel nemá schválený reset hesla před přihlášením
       const email = makeInternalEmail(username);
       const { data: profile } = await db.from('profiles').select('*').eq('username', username.trim().toLowerCase()).single();
 
@@ -464,11 +492,6 @@
 
       if (!pendingResetUserId) return alert('Chyba identifikace uživatele.');
 
-      // Aktualizace hesla administrátorskou funkcí / resetovacím procesem Supabase
-      const { data: profile } = await db.from('profiles').select('*').eq('id', pendingResetUserId).single();
-      const email = makeInternalEmail(profile.username);
-
-      // Vymažeme flagy resetu v databázi
       await db.from('profiles').update({ reset_requested: false, reset_approved: false }).eq('id', pendingResetUserId);
 
       alert('Heslo bylo úspěšně aktualizováno! Nyní se můžeš přihlásit novým heslem.');
@@ -628,7 +651,7 @@
         div.innerHTML = `
           <div class="recent-rec-header">
             <span>Nahrávka #${logs.length - index} (${dateStr})</span>
-            ${log.audio_url ? `<a href="${log.audio_url}" download="nahravka_${dateObj.getTime()}.wav" target="_blank" class="btn-download">💾</a>` : ''}
+            ${log.audio_url ? `<a href="${log.audio_url}" download="nahravka_${dateObj.getTime()}" target="_blank" class="btn-download">💾</a>` : ''}
           </div>
           ${log.audio_url ? `<audio controls src="${log.audio_url}" style="width: 100%; height: 32px;"></audio>` : '<em>Bez zvuku</em>'}
         `;
@@ -700,17 +723,19 @@
 
         mediaRecorder.onstop = () => {
           recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          selectedFileType = 'audio/wav';
+          
           const audioPlayback = document.getElementById('audio-playback');
           const previewBox = document.getElementById('preview-box');
           const statusText = document.getElementById('status-text');
 
           audioPlayback.src = URL.createObjectURL(recordedBlob);
           previewBox.classList.remove('hidden');
-          statusText.innerText = "Nahrávka připravena ke kontrole";
+          statusText.innerText = "Nahrávka z mikrofonu připravena ke kontrole";
           statusText.style.color = "var(--text-color)";
         };
       } catch (err) {
-        document.getElementById('status-text').innerText = "Mikrofon není dostupný.";
+        document.getElementById('status-text').innerText = "Mikrofon není dostupný. Můžeš nahrát soubor z zařízení.";
       }
     }
 
@@ -738,6 +763,24 @@
       }
     }
 
+    // Zpracování vybraného audio souboru z disku (.mp3, .wav atd.)
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      recordedBlob = file;
+      selectedFileType = file.type || 'audio/mp3';
+
+      const audioPlayback = document.getElementById('audio-playback');
+      const previewBox = document.getElementById('preview-box');
+      const statusText = document.getElementById('status-text');
+
+      audioPlayback.src = URL.createObjectURL(file);
+      previewBox.classList.remove('hidden');
+      statusText.innerText = `Vybrán soubor: ${file.name}`;
+      statusText.style.color = "var(--text-color)";
+    }
+
     async function uploadRecording() {
       if (!recordedBlob) return;
       const statusText = document.getElementById('status-text');
@@ -746,8 +789,10 @@
       statusText.innerText = "Ukládám nahrávku...";
 
       try {
-        const fileName = `${currentUser.id}/${Date.now()}.wav`;
-        const { error: uploadError } = await db.storage.from('recordings').upload(fileName, recordedBlob, { contentType: 'audio/wav' });
+        const ext = selectedFileType.includes('mp3') ? 'mp3' : selectedFileType.includes('ogg') ? 'ogg' : 'wav';
+        const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
+        
+        const { error: uploadError } = await db.storage.from('recordings').upload(fileName, recordedBlob, { contentType: selectedFileType });
         if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = db.storage.from('recordings').getPublicUrl(fileName);
@@ -758,6 +803,7 @@
         statusText.style.color = "#2ecc71";
         recBtn.classList.add('sent');
         document.getElementById('preview-box').classList.add('hidden');
+        document.getElementById('audio-file-input').value = "";
         recordedBlob = null;
 
         await loadUserProfile();
@@ -775,9 +821,10 @@
     function discardRecording() {
       recordedBlob = null;
       audioChunks = [];
+      document.getElementById('audio-file-input').value = "";
       document.getElementById('preview-box').classList.add('hidden');
       const statusText = document.getElementById('status-text');
-      statusText.innerText = "Nahrávka smazána. Stiskni tlačítko a nahraj znovu.";
+      statusText.innerText = "Nahrávka zrušena. Můžeš nahrát novou.";
       statusText.style.color = "var(--text-color)";
     }
 
