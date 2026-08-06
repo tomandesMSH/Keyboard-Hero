@@ -4,166 +4,169 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keyboard Hero</title>
+  <script>
+    (function() {
+      if (localStorage.getItem('kh-theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game-logic.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
-
     :root {
-      --bg-color: #0d0a20;
-      --card-bg: #1c1633;
-      --primary-color: #ff2ec4;
-      --primary-color-dark: #b81f8c;
-      --primary-blue: #7c5cff;
-      --primary-blue-dark: #5f3fd9;
-      --danger-color: #ff5c5c;
-      --danger-color-dark: #d93a3a;
-      --gold-color: #ffd23f;
-      --gold-color-dark: #d9a800;
-      --text-color: #ffffff;
-      --text-muted: #a9acc9;
-      --border-color: #382a5c;
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --primary-color: #2ecc71;
+      --danger-color: #ff3b30;
+      --primary-blue: #3498db;
+      --text-color: #2c3e50;
+      --border-color: #e2e8f0;
+      --muted-text: #7f8c8d;
+      --soft-bg: #f8fafc;
+      --cal-bg: #f1f5f9;
+      --cal-text: #334155;
+      --highlight-bg: #e0f2fe;
+      --highlight-text: #0369a1;
+      --warning-bg: #fffbe3;
+      --warning-border: #f1c40f;
+      --warning-text: #8a6d3b;
+      --label-text: #666666;
+      --header-muted: #475569;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: linear-gradient(160deg, #1a1030 0%, #0d0a20 100%); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-    h1, h3, h4, .btn { font-weight: 800; }
-    .app-container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
+    [data-theme="dark"] {
+      --bg-color: #12151a;
+      --card-bg: #1c2128;
+      --primary-color: #2ecc71;
+      --danger-color: #ff453a;
+      --primary-blue: #4aa8ea;
+      --text-color: #e6edf3;
+      --border-color: #30363d;
+      --muted-text: #8b949e;
+      --soft-bg: #242a32;
+      --cal-bg: #262c35;
+      --cal-text: #c9d1d9;
+      --highlight-bg: #163a52;
+      --highlight-text: #7dd3fc;
+      --warning-bg: #3a3110;
+      --warning-border: #a67c00;
+      --warning-text: #e8c468;
+      --label-text: #9aa4b2;
+      --header-muted: #b0b8c4;
+    }
+
+    .theme-toggle-btn {
+      position: fixed; top: 15px; right: 15px; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid var(--border-color); background: var(--card-bg);
+      color: var(--text-color); font-size: 1.2rem; cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .app-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; }
 
     header { display: flex; justify-content: space-between; align-items: center; }
-    h1 { color: var(--gold-color); font-size: 1.8rem; text-shadow: 0 0 12px rgba(255, 210, 63, 0.6); }
-
-    .stats-bar { display: flex; gap: 15px; background: var(--card-bg); padding: 10px 20px; border-radius: 16px; border: 2px solid var(--border-color); }
+    h1 { color: var(--primary-color); border-bottom: 4px solid var(--primary-color); display: inline-block; padding-bottom: 4px; }
+    
+    .stats-bar { display: flex; gap: 15px; background: var(--card-bg); padding: 10px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .stat-item { text-align: center; }
-    .stat-val { font-weight: 800; font-size: 1.2rem; }
-    .stat-lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+    .stat-val { font-weight: bold; font-size: 1.2rem; }
+    .stat-lbl { font-size: 0.75rem; color: var(--muted-text); }
 
-    .auth-card { background: var(--card-bg); padding: 25px; border-radius: 18px; border: 2px solid var(--primary-color); box-shadow: 0 0 30px rgba(255, 46, 196, 0.35); max-width: 400px; margin: 40px auto; width: 100%; }
-    .auth-card h2 { margin-bottom: 15px; text-align: center; color: var(--text-color); }
-    .input-field { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 12px; font-size: 1rem; color: var(--text-color); }
-    .input-field::placeholder { color: var(--text-muted); }
-    .input-field:focus { outline: none; border-color: var(--primary-blue); }
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 16px; font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: transform 0.05s ease, box-shadow 0.05s ease; }
-    .btn:active { transform: translateY(4px); }
-    .btn-primary { background: var(--primary-color); color: white; box-shadow: 0 4px 0 var(--primary-color-dark), 0 0 16px rgba(255, 46, 196, 0.5); }
-    .btn-primary:active { box-shadow: 0 0 0 var(--primary-color-dark); }
-    .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; box-shadow: 0 4px 0 var(--primary-blue-dark), 0 0 16px rgba(124, 92, 255, 0.5); }
-    .btn-secondary:active { box-shadow: 0 0 0 var(--primary-blue-dark); }
-    .btn-danger { background: var(--danger-color); color: white; box-shadow: 0 4px 0 var(--danger-color-dark); }
-    .btn-danger:active { box-shadow: 0 0 0 var(--danger-color-dark); }
+    .auth-card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 400px; margin: 40px auto; width: 100%; }
+    .auth-card h2 { margin-bottom: 15px; text-align: center; }
+    .input-field { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid var(--border-color); border-radius: 6px; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-secondary { background: var(--primary-blue); color: white; margin-top: 8px; }
+    .btn-danger { background: var(--danger-color); color: white; }
 
     .main-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 20px; align-items: start; }
-    @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 850px) { .main-grid { grid-template-columns: 1fr; } }
 
-    .card { background: var(--card-bg); padding: 20px; border-radius: 18px; border: 2px solid var(--border-color); }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
 
     /* Recorder - 3 Stavy mikrofonu */
     .recorder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
-    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: none; color: white; font-size: 2.3rem; cursor: pointer; background: var(--danger-color); box-shadow: 0 6px 0 var(--danger-color-dark), 0 0 20px rgba(255, 92, 92, 0.5); transition: transform 0.05s ease, box-shadow 0.05s ease; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
+    .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: var(--danger-color); color: white; font-size: 2.3rem; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; margin: 15px 0; }
 
-    .mic-btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--danger-color-dark); }
 
+    .mic-btn:active { transform: scale(0.95); }
+    
     /* 2. Stav: Při nahrávání */
-    .mic-btn.recording {
-      animation: pulse 1.2s infinite;
-      background: var(--danger-color-dark);
+    .mic-btn.recording { 
+      animation: pulse 1.2s infinite; 
+      background: #c0392b; 
+      border-color: #c0392b; 
     }
 
     /* 3. Stav: Po úspěšném odeslání */
-    .mic-btn.sent {
-      background: var(--primary-color);
-      box-shadow: 0 6px 0 var(--primary-color-dark), 0 0 20px rgba(255, 46, 196, 0.6);
+    .mic-btn.sent { 
+      background: var(--primary-color); 
+      border-color: var(--primary-color); 
+      box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); 
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 6px 0 var(--danger-color-dark), 0 0 0 0 rgba(255, 92, 92, 0.7); }
-      70% { box-shadow: 0 6px 0 var(--danger-color-dark), 0 0 0 20px rgba(255, 92, 92, 0); }
-      100% { box-shadow: 0 6px 0 var(--danger-color-dark), 0 0 0 0 rgba(255, 92, 92, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(255, 59, 48, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
     }
 
     /* Kalendář */
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-top: 8px; }
-    .day-name { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
-    .cal-day { padding: 6px 2px; font-size: 0.8rem; font-weight: 700; border-radius: 8px; background: var(--bg-color); color: var(--text-muted); }
+    .day-name { font-size: 0.75rem; font-weight: bold; color: var(--muted-text); }
+    .cal-day { padding: 6px 2px; font-size: 0.8rem; border-radius: 6px; background: var(--cal-bg); color: var(--cal-text); }
     .cal-day.empty { background: transparent; }
-    .cal-day.played { background: var(--gold-color); color: #1a1030; font-weight: 800; position: relative; box-shadow: 0 0 12px rgba(255, 210, 63, 0.6); animation: kh-day-pop 0.35s ease; }
-    @keyframes kh-day-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .cal-day.played { background: linear-gradient(135deg, #ff9f43, #ff3b30); color: white; font-weight: bold; position: relative; }
 
-    /* Žebříček */
-    .leader-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 2px solid var(--border-color); font-size: 0.85rem; font-weight: 700; }
+    /* Žebříček & Komentáře */
+    .leader-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     .leader-item:last-child { border-bottom: none; }
 
-    .level-progress-track { width: 100%; height: 14px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; margin-top: 6px; overflow: hidden; }
-    .level-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--primary-blue)); border-radius: 8px; box-shadow: 0 0 10px rgba(255, 46, 196, 0.6); transition: width 0.4s ease; }
-    .badge-shelf { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .badge-chip { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: var(--bg-color); opacity: 0.3; filter: grayscale(1); overflow: hidden; }
-    .badge-chip.unlocked { opacity: 1; filter: none; background: #2c1f4d; box-shadow: 0 0 12px rgba(255, 210, 63, 0.7), inset 0 0 0 2px var(--gold-color); }
-
-    .mascot-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-    .mascot-option { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: var(--bg-color); border: 2px solid var(--border-color); opacity: 0.3; filter: grayscale(1); }
-    .mascot-option.unlocked { opacity: 1; filter: none; cursor: pointer; }
-    .mascot-option.selected { border-color: var(--gold-color); box-shadow: 0 0 10px rgba(255, 210, 63, 0.6); }
-
-    .visualizer { display: block; margin: 8px auto; border-radius: 8px; background: rgba(0, 0, 0, 0.3); }
-
-    .daily-reminder { margin-top: 10px; padding: 10px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; text-align: center; }
-    .daily-reminder.pending { background: rgba(255, 210, 63, 0.15); color: var(--gold-color); }
-    .daily-reminder.done { background: rgba(124, 92, 255, 0.2); color: #b6a4ff; }
-
-    .kh-toast { position: fixed; top: 20px; right: 20px; background: var(--card-bg); border-radius: 16px; border: 2px solid var(--gold-color); padding: 12px 18px; box-shadow: 0 0 24px rgba(255, 210, 63, 0.4); animation: kh-toast-in 0.3s ease; z-index: 1000; }
-    @keyframes kh-toast-in { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-    .kh-levelup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1001; cursor: pointer; }
-    .kh-levelup-card { background: var(--card-bg); padding: 30px 40px; border-radius: 20px; border: 2px solid var(--primary-color); font-size: 1.4rem; font-weight: 800; text-align: center; color: var(--gold-color); box-shadow: 0 0 50px rgba(255, 46, 196, 0.6); animation: kh-pop 0.4s ease; }
-    @keyframes kh-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .kh-milestone-card { border-color: var(--gold-color); box-shadow: 0 0 60px rgba(255, 210, 63, 0.7); }
-    .kh-onboarding-card { max-width: 320px; color: var(--text-color); }
-    .kh-onboarding-card .btn { margin-top: 4px; }
-    .mute-btn { border: none; background: transparent; font-size: 1.3rem; cursor: pointer; margin-top: 6px; }
-    .mascot { font-size: 2.5rem; margin-bottom: 6px; display: inline-block; filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.6)); }
-    .mascot.recording { animation: kh-mascot-bounce 0.6s infinite; }
-    .mascot.celebrating { animation: kh-mascot-spin 0.6s ease; }
-    @keyframes kh-mascot-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes kh-mascot-spin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.3); } to { transform: rotate(360deg) scale(1); } }
-
-    /* Komentáře učitele */
-    .my-recording-item { background: var(--bg-color); padding: 10px; border-radius: 12px; margin-top: 8px; border: 2px solid var(--border-color); font-size: 0.85rem; }
-    .comment-text { background: rgba(124, 92, 255, 0.2); color: #b6a4ff; padding: 8px 10px; border-radius: 10px; margin-top: 6px; font-weight: 700; }
+    .my-recording-item { background: var(--soft-bg); padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid var(--border-color); font-size: 0.85rem; }
+    .comment-text { background: var(--highlight-bg); color: var(--highlight-text); padding: 6px 10px; border-radius: 6px; margin-top: 6px; font-weight: 500; }
 
     /* Novinky */
-    .news-item { background: var(--bg-color); padding: 10px; border-radius: 10px; margin-bottom: 8px; font-size: 0.85rem; }
-    .news-date { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px; }
+    .news-item { background: var(--soft-bg); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem;}
+    .news-date { font-size: 0.75rem; color: var(--muted-text); display: block; margin-bottom: 2px; }
 
     /* Nedávné nahrávky */
-    .recent-rec-item { background: var(--bg-color); padding: 10px; border-radius: 10px; margin-top: 8px; border: 2px solid var(--border-color); }
-    .recent-rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
-    .btn-download { background: var(--primary-blue); color: white; text-decoration: none; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: inline-block; }
+    .recent-rec-item { background: var(--soft-bg); padding: 10px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--border-color); }
+    .recent-rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; font-weight: bold; color: var(--header-muted); }
+    .btn-download { border: 1px solid var(--primary-blue); color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
 
-    .warning-box { background: rgba(255, 210, 63, 0.15); border: 1px solid var(--gold-color); padding: 8px 10px; border-radius: 8px; font-size: 0.75rem; color: var(--gold-color); margin-bottom: 10px; }
+    .warning-box { background: var(--warning-bg); border: 1px solid var(--warning-border); padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; color: var(--warning-text); margin-bottom: 10px; }
 
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
+  <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Přepnout světlý/tmavý režim">🌙</button>
+
   <div class="app-container">
 
     <div id="auth-section" class="auth-card">
       <h2 id="auth-title">Přihlášení žáka</h2>
       
-      <label style="font-size: 0.85rem; color: var(--text-muted);">Uživatelské jméno:</label>
+      <label style="font-size: 0.85rem; color: var(--label-text);">Uživatelské jméno:</label>
       <input type="text" id="auth-username" class="input-field" placeholder="jannovak">
 
       <div id="reg-fields" class="hidden">
-        <label style="font-size: 0.85rem; color: var(--text-muted);">Celé jméno:</label>
+        <label style="font-size: 0.85rem; color: var(--label-text);">Celé jméno:</label>
         <input type="text" id="auth-fullname" class="input-field" placeholder="Jan Novák">
       </div>
 
-      <label style="font-size: 0.85rem; color: var(--text-muted);">Heslo:</label>
+      <label style="font-size: 0.85rem; color: var(--label-text);">Heslo:</label>
       <input type="password" id="auth-password" class="input-field" placeholder="Heslo">
 
-      <label style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
+      <label style="font-size: 0.85rem; color: var(--label-text); display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
         <input type="checkbox" id="auth-remember" checked style="width: 16px; height: 16px;">
         Zapamatovat si mě
       </label>
@@ -177,7 +180,6 @@
     </div>
 
     <div id="app-section" class="hidden">
-      
       <header>
         <h1>Keyboard Hero</h1>
         <div class="stats-bar">
@@ -191,28 +193,26 @@
           </div>
           <div class="stat-item">
             <div class="stat-val">⭐ : <span id="stat-stars">0</span></div>
-            <div class="stat-lbl">koncert</div>
+            <div class="stat-lbl">koncertů</div>
           </div>
           <div class="stat-item">
             <a style="text-decoration: none;" href="http://tomandesmsh.github.io/Keyboard-Hero-Docs/" target="_blank">
               <div class="stat-val">❓</div>
-              <div class="stat-lbl" style="color: var(--text-muted);">nápověda</div>
+              <div class="stat-lbl">nápověda</div>
             </a>
           </div>
         </div>
       </header>
+<pre>
 
-      <pre>
-        
-      </pre>
-
+</pre>
       <div class="main-grid">
-
+        
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card">
             <h3>🎼 Kalendář</h3>
             <div id="calendar-month-name" style="font-weight: bold; margin: 8px 0 4px 0; color: var(--primary-blue); text-transform: capitalize; font-size: 0.9rem;"></div>
-
+            
             <div class="calendar-grid">
               <div class="day-name">Po</div><div class="day-name">Út</div><div class="day-name">St</div>
               <div class="day-name">Čt</div><div class="day-name">Pá</div><div class="day-name">So</div><div class="day-name">Ne</div>
@@ -226,7 +226,7 @@
               Starší nahrávky se průběžně mažou. Pokud o nahrávku nechceš přijít, stáhni si ji!
             </div>
             <div id="recent-recordings-box">
-              <em style="font-size: 0.8rem; color: var(--text-muted);">Načítám nedávné nahrávky...</em>
+              <em style="font-size: 0.8rem; color: var(--muted-text);">Načítám nedávné nahrávky...</em>
             </div>
           </div>
         </div>
@@ -234,18 +234,14 @@
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card recorder-card">
             <h3>Nahrávání Cvičení</h3>
-            <div id="mascot" class="mascot">🎵</div>
-            <canvas id="visualizer" class="visualizer hidden" width="220" height="50"></canvas>
             <button id="record-btn" class="mic-btn" onclick="toggleRecording()">🎤</button>
-            <button id="mute-toggle" class="mute-btn" onclick="toggleMute()" title="Ztlumit/zapnout zvuky">🔊</button>
             <div id="status-text" style="font-size: 0.85rem; font-weight: bold;">Stiskni a začni hrát</div>
-            <div id="daily-reminder" class="daily-reminder pending"></div>
 
             <audio id="audio-playback" controls hidden style="margin-top: 10px; width: 100%;"></audio>
 
             <hr style="width: 100%; margin: 15px 0; border: none; border-top: 1px solid var(--border-color);">
-
-            <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">💬 Hodnocení od učitele</h4>
+            
+            <h4 style="width: 100%; text-align: left; margin-bottom: 5px;">Hodnocení od učitele</h4>
             <div id="my-comments-box" style="width: 100%; max-height: 180px; overflow-y: auto;">
             </div>
           </div>
@@ -253,45 +249,25 @@
           <div class="card">
             <h3>🔔 Novinky a Upozornění</h3>
             <div id="news-box" style="margin-top: 10px; max-height: 250px; overflow-y: auto;">
-              <em style="font-size: 0.8rem; color: var(--text-muted);">Načítám novinky...</em>
+              <em style="font-size: 0.8rem; color: var(--muted-text);">Načítám novinky...</em>
             </div>
           </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 15px;">
           <div class="card">
-            <h3>🏆 Žebříček (Top Žáci)</h3>
+            <h3>Žebříček (Top Žáci)</h3>
             <div id="leaderboard-box" style="margin-top: 10px;">
             </div>
           </div>
 
           <div class="card">
-            <h3>🎖️ Týdenní liga</h3>
-            <div id="weekly-league-box" style="margin-top: 10px;">
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>👤 Profil žáka</h3>
+            <h3>Profil žáka</h3>
             <p style="margin-top: 8px; font-size: 0.9rem;"><strong>Jméno:</strong> <span id="profile-name">-</span></p>
-
-            <div class="level-block" style="margin-top: 12px;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
-                <span id="level-title">Level 1 · Nováček</span>
-                <span id="level-stars-to-next">10 ⭐ do dalšího levelu</span>
-              </div>
-              <div class="level-progress-track">
-                <div id="level-progress-fill" class="level-progress-fill" style="width: 0%;"></div>
-              </div>
-            </div>
-
-            <div id="badge-shelf" class="badge-shelf"></div>
-
-            <div id="mascot-picker" class="mascot-picker"></div>
-
             <button class="btn btn-danger" style="margin-top: 12px; padding: 6px;" onclick="logout()">Odhlásit se</button>
           </div>
         </div>
+        
 
       </div>
 
@@ -299,11 +275,11 @@
 
   </div>
 
+  
   <script>
     const SUPABASE_URL = 'https://brobyvjvllhrqkcsvlrn.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KuSGh4yNj3WdJ0KkLzA0GA_Z4w2uGxl';
 
-    // Inicializace klienta Supabase
     let db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         persistSession: true,
@@ -316,246 +292,6 @@
     let audioChunks = [];
     let isRecording = false;
     let isSignUpMode = false;
-    let currentPlayedDateKeys = [];
-    let currentWeeklyStats = { weeklyCount: 0, daysPlayedThisWeek: 0 };
-
-    function isCurrentWeekPerfect() {
-      // KHGame may be missing (script failed to load) — degrade to "not perfect" instead of throwing.
-      try {
-        return KHGame.isPerfectWeek(currentPlayedDateKeys, new Date());
-      } catch (err) {
-        console.warn('isPerfectWeek unavailable:', err);
-        return false;
-      }
-    }
-
-    function updateDailyReminder(playedDateKeys) {
-      const banner = document.getElementById('daily-reminder');
-      const today = new Date();
-      let playedToday = false;
-      // KHGame may be missing (script failed to load) — degrade to the "pending" reminder.
-      try {
-        playedToday = KHGame.hasPlayedToday(playedDateKeys, today);
-      } catch (err) {
-        console.warn('hasPlayedToday unavailable:', err);
-      }
-      if (playedToday) {
-        banner.className = 'daily-reminder done';
-        banner.innerText = '🎉 Dnes už máš splněno! Zítra můžeš pokračovat v řadě.';
-      } else {
-        banner.className = 'daily-reminder pending';
-        banner.innerText = '🎯 Dnes ještě nehrálo/a jsi! Zahraj a udrž řadu.';
-      }
-    }
-
-    function getUnlockStorageKey() {
-      return 'kh_seen_' + currentUser.id;
-    }
-
-    function readSeenState() {
-      try {
-        const raw = localStorage.getItem(getUnlockStorageKey());
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        // Only trust a value with the exact expected shape; anything else is treated as
-        // first-run so writeSeenState() can overwrite the corrupt entry with a valid baseline.
-        if (parsed && typeof parsed.level === 'number' && Array.isArray(parsed.badgeIds)) {
-          return parsed;
-        }
-        return null;
-      } catch (err) {
-        return null;
-      }
-    }
-
-    function writeSeenState(state) {
-      try {
-        localStorage.setItem(getUnlockStorageKey(), JSON.stringify(state));
-      } catch (err) {
-        // localStorage unavailable (private mode etc.) — celebrations just won't persist across sessions.
-      }
-    }
-
-    const STREAK_MILESTONE_BADGE_IDS = ['tyden-v-ohni', 'mesic-discipliny', 'stoleti-legenda'];
-
-    function checkForNewUnlocks(levelInfo, badges) {
-      const seen = readSeenState();
-      const unlockedIds = badges.filter(b => b.unlocked).map(b => b.id);
-
-      if (seen) {
-        if (levelInfo.level > seen.level) {
-          showLevelUpCelebration(levelInfo);
-        }
-        const newBadges = badges.filter(b => b.unlocked && !seen.badgeIds.includes(b.id));
-        newBadges.forEach(badge => {
-          if (STREAK_MILESTONE_BADGE_IDS.includes(badge.id)) {
-            showMilestoneCelebration(badge);
-          } else {
-            showBadgeToast(badge);
-          }
-        });
-      }
-
-      writeSeenState({ level: levelInfo.level, badgeIds: unlockedIds });
-    }
-
-    function showBadgeToast(badge) {
-      const toast = document.createElement('div');
-      toast.className = 'kh-toast';
-      toast.innerHTML = `<strong>${badge.icon} Nový odznak!</strong><div>${badge.label}</div>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
-    }
-
-    function showLevelUpCelebration(levelInfo) {
-      const overlay = document.createElement('div');
-      overlay.className = 'kh-levelup-overlay';
-      overlay.innerHTML = `<div class="kh-levelup-card">🎉 LEVEL UP! 🎉<br>Level ${levelInfo.level} · ${levelInfo.title}</div>`;
-      overlay.onclick = () => overlay.remove();
-      document.body.appendChild(overlay);
-      fireConfetti();
-      playFanfare();
-      setTimeout(() => overlay.remove(), 3500);
-    }
-
-    function showMilestoneCelebration(badge) {
-      const overlay = document.createElement('div');
-      overlay.className = 'kh-levelup-overlay';
-      overlay.innerHTML = `<div class="kh-levelup-card kh-milestone-card">${badge.icon}<br>${badge.label}!</div>`;
-      overlay.onclick = () => overlay.remove();
-      document.body.appendChild(overlay);
-      fireConfetti(160);
-      playFanfare();
-      setTimeout(() => overlay.remove(), 4500);
-    }
-
-    function isMuted() {
-      try {
-        return localStorage.getItem('kh_muted') === 'true';
-      } catch (err) {
-        return false;
-      }
-    }
-
-    function toggleMute() {
-      const btn = document.getElementById('mute-toggle');
-      if (!btn) return;
-      const nowMuted = !isMuted();
-      try {
-        localStorage.setItem('kh_muted', String(nowMuted));
-      } catch (err) {
-        // localStorage unavailable — mute state just won't persist across reloads.
-      }
-      btn.innerText = nowMuted ? '🔇' : '🔊';
-    }
-
-    function initMuteToggle() {
-      const btn = document.getElementById('mute-toggle');
-      if (!btn) return;
-      btn.innerText = isMuted() ? '🔇' : '🔊';
-    }
-
-    function playFanfare() {
-      if (isMuted()) return;
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-        notes.forEach((freq, i) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.frequency.value = freq;
-          osc.type = 'triangle';
-          const startTime = audioCtx.currentTime + i * 0.12;
-          gain.gain.setValueAtTime(0.2, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.3);
-        });
-        const totalDurationMs = ((notes.length - 1) * 0.12 + 0.3) * 1000;
-        setTimeout(() => {
-          try {
-            audioCtx.close();
-          } catch (err) {
-            // Already closed or unable to close — nothing more to do.
-          }
-        }, totalDurationMs);
-      } catch (err) {
-        // Web Audio unavailable/blocked — celebration continues visually only.
-      }
-    }
-
-    function playClickTone() {
-      if (isMuted()) return;
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.value = 440;
-        osc.type = 'square';
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-        setTimeout(() => {
-          try {
-            audioCtx.close();
-          } catch (err) {
-            // Already closed or unable to close — nothing more to do.
-          }
-        }, 150);
-      } catch (err) {
-        // Web Audio unavailable/blocked — no click sound, no crash.
-      }
-    }
-
-    function fireConfetti(particleCount) {
-      if (document.getElementById('kh-confetti-canvas')) return;
-      const canvas = document.createElement('canvas');
-      canvas.id = 'kh-confetti-canvas';
-      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1002;';
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      document.body.appendChild(canvas);
-      const ctx = canvas.getContext('2d');
-
-      const colors = ['#ff2ec4', '#7c5cff', '#ffd23f', '#ff5c5c', '#17c3b2'];
-      const particles = Array.from({ length: particleCount || 80 }, () => ({
-        x: Math.random() * canvas.width,
-        y: -20 - Math.random() * canvas.height * 0.3,
-        size: 4 + Math.random() * 6,
-        speedY: 2 + Math.random() * 3,
-        speedX: -2 + Math.random() * 4,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360
-      }));
-
-      let frame = 0;
-      function tick() {
-        frame++;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.y += p.speedY;
-          p.x += p.speedX;
-          p.rotation += 6;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation * Math.PI / 180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-          ctx.restore();
-        });
-        if (frame < 90) {
-          requestAnimationFrame(tick);
-        } else {
-          canvas.remove();
-        }
-      }
-      tick();
-    }
 
     function makeInternalEmail(username) {
       const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
@@ -596,109 +332,97 @@
       }
     }
 
-    async function signup() {
-      const username = document.getElementById('auth-username').value;
-      const fullName = document.getElementById('auth-fullname').value;
-      const password = document.getElementById('auth-password').value;
-      if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
+async function signup() {
+  const username = document.getElementById('auth-username').value;
+  const fullName = document.getElementById('auth-fullname').value;
+  const password = document.getElementById('auth-password').value;
+  if (!username || !password || !fullName) return alert('Vyplň všechna pole!');
 
-      const email = makeInternalEmail(username);
-      const { data, error } = await db.auth.signUp({
-        email, password, options: { data: { full_name: fullName, role: 'student' } }
-      });
-      if (error) {
-        alert('Chyba: ' + error.message);
-      } else {
-        // Supabase přihlásí uživatele hned po registraci — odhlásíme ho, dokud ho neschválí učitel.
-        await db.auth.signOut();
-        alert('Registrace byla úspěšně odeslána! Nyní musí tvůj účet schválit učitel (administrátor).');
-        toggleAuthMode();
-      }
+  const email = makeInternalEmail(username);
+  const { data, error } = await db.auth.signUp({
+    email, 
+    password, 
+    options: { 
+      data: { full_name: fullName, role: 'student' } 
     }
+  });
 
-    async function logout() {
-      await db.auth.signOut();
-      location.reload();
-    }
+  if (error) {
+    alert('Chyba registrace: ' + error.message);
+  } else {
+    // Odhlásíme dočasné přihlášení, které Supabase po signUp vytváří
+    await db.auth.signOut();
+    alert('Registrace byla úspěšně odeslána! Nyní musí tvůj účet schválit učitel (administrátor).');
+    toggleAuthMode();
+  }
+}
 
-    async function initApp(user) {
-      currentUser = user;
+async function loadUserProfile() {
+  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  
+  // Kontrola schválení účtu
+  if (profile && profile.role === 'student' && !profile.is_approved) {
+    alert('Tůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrdění.');
+    await logout();
+    return false;
+  }
 
-      const { data: accountProfile } = await db.from('profiles').select('is_approved, is_banned, role').eq('id', user.id).single();
-      if (accountProfile && accountProfile.is_banned) {
-        alert('Tvůj účet byl zablokován (BAN). Pro více informací kontaktuj učitele.');
-        await logout();
-        return;
-      }
-      if (accountProfile && accountProfile.role === 'student' && !accountProfile.is_approved) {
-        alert('Tvůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrzení.');
-        await logout();
-        return;
-      }
+  if (profile) {
+    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+    document.getElementById('stat-streak').innerText = profile.streak || 0;
+    document.getElementById('stat-stars').innerText = profile.stars || 0;
+  }
+  
+  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+  document.getElementById('stat-sent').innerText = count || 0;
+  return true;
+}
 
-      document.getElementById('auth-section').classList.add('hidden');
-      document.getElementById('app-section').classList.remove('hidden');
+async function initApp(user) {
+  currentUser = user;
+  
+  // Zkontrolujeme profil a schválení před zobrazením aplikace
+  const isApproved = await loadUserProfile();
+  if (!isApproved) return;
 
-      await renderCalendar();
-      await loadUserProfile();
-      await loadLeaderboard();
-      await loadWeeklyLeague();
-      await loadMyComments();
-      await loadRecentRecordings();
-      await loadNews();
-      await setupAudioRecording();
-      initMuteToggle();
-      maybeShowOnboarding();
-    }
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('app-section').classList.remove('hidden');
 
-    async function loadUserProfile() {
-      const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-      if (profile) {
-        document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
-        document.getElementById('stat-streak').innerText = profile.streak || 0;
-        document.getElementById('stat-stars').innerText = profile.stars || 0;
-      }
-      const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-      document.getElementById('stat-sent').innerText = count || 0;
+  await renderCalendar();
+  await loadLeaderboard();
+  await loadMyComments();
+  await loadRecentRecordings();
+  await loadNews();
+  await setupAudioRecording();
+}
 
-      renderLevelAndBadges(profile, count || 0, isCurrentWeekPerfect());
-    }
+async function loadUserProfile() {
+  const { data: profile, error } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  
+  // 1. Kontrola zablokování (Ban)
+  if (profile && profile.is_banned) {
+    alert('Tvůj účet byl zablokován (BAN). Pro více informací kontaktuj učitele.');
+    await logout();
+    return false;
+  }
 
-    function renderLevelAndBadges(profile, totalRecordings, perfectWeek) {
-      try {
-        const stars = (profile && profile.stars) || 0;
-        const streak = (profile && profile.streak) || 0;
-        const levelInfo = KHGame.computeLevel(stars);
+  // 2. Kontrola schválení účtu
+  if (profile && profile.role === 'student' && !profile.is_approved) {
+    alert('Tvůj účet ještě nebyl schválen administrátorem. Vyčkej prosím na potvrzení.');
+    await logout();
+    return false;
+  }
 
-        document.getElementById('level-title').innerText = `Level ${levelInfo.level} · ${levelInfo.title}`;
-        document.getElementById('level-stars-to-next').innerText = `${levelInfo.starsToNext} ⭐ do dalšího levelu`;
-        document.getElementById('level-progress-fill').style.width = `${Math.round(levelInfo.progress * 100)}%`;
-
-        const badges = KHGame.computeBadges({
-          stars,
-          streak,
-          totalRecordings,
-          perfectWeek,
-          daysPlayedThisWeek: currentWeeklyStats.daysPlayedThisWeek,
-          weeklyCount: currentWeeklyStats.weeklyCount
-        });
-        const shelf = document.getElementById('badge-shelf');
-        shelf.innerHTML = '';
-        badges.forEach(badge => {
-          const chip = document.createElement('div');
-          chip.className = 'badge-chip' + (badge.unlocked ? ' unlocked' : '');
-          chip.title = badge.unlocked ? badge.label : `${badge.label} (${badge.progressLabel})`;
-          chip.innerText = badge.icon;
-          shelf.appendChild(chip);
-        });
-
-        applyMascotSkin(levelInfo.level);
-        checkForNewUnlocks(levelInfo, badges);
-      } catch (err) {
-        console.warn('Failed to render level and badges:', err);
-      }
-    }
-
+  if (profile) {
+    document.getElementById('profile-name').innerText = profile.full_name || 'Žák';
+    document.getElementById('stat-streak').innerText = profile.streak || 0;
+    document.getElementById('stat-stars').innerText = profile.stars || 0;
+  }
+  
+  const { count } = await db.from('practice_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+  document.getElementById('stat-sent').innerText = count || 0;
+  return true;
+}
     async function renderCalendar() {
       const daysContainer = document.getElementById('calendar-days');
       const monthNameEl = document.getElementById('calendar-month-name');
@@ -709,51 +433,13 @@
       const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
       monthNameEl.innerText = `${monthNames[month]} ${year}`;
 
-      // Query 7 days before the month starts so a week straddling the month boundary still has
-      // all its days available for isPerfectWeek(). The visible grid stays month-only below.
-      const queryStart = new Date(year, month, 1 - 7).toISOString();
+      const startOfMonth = new Date(year, month, 1).toISOString();
       const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
-      const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', queryStart).lte('created_at', endOfMonth);
-
-      // Monday..today keys for this week's stats (badge progress, weekly challenge).
-      // Guarded the same way as the per-log KHGame calls below: if KHGame is missing,
-      // weekly stats just stay at their zero default rather than throwing.
-      let mondayKey = null;
-      let todayKey = null;
-      try {
-        const dayOfWeek = (now.getDay() + 6) % 7;
-        const mondayOfThisWeek = new Date(year, month, now.getDate() - dayOfWeek);
-        mondayKey = KHGame.toDateKey(mondayOfThisWeek);
-        todayKey = KHGame.toDateKey(now);
-      } catch (err) {
-        // Weekly stats degrade to 0; the calendar grid still renders.
-      }
+      const { data: logs } = await db.from('practice_logs').select('created_at').eq('user_id', currentUser.id).gte('created_at', startOfMonth).lte('created_at', endOfMonth);
 
       const playedDays = new Set();
-      const playedDateKeys = [];
-      const thisWeekDateKeys = new Set();
-      let weeklyCount = 0;
-      if (logs) logs.forEach(log => {
-        const d = new Date(log.created_at);
-        // Grid cells only for days inside the displayed month.
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          playedDays.add(d.getDate());
-        }
-        // KHGame may be missing (script failed to load) — skip the key rather than break the calendar.
-        try {
-          const key = KHGame.toDateKey(d);
-          playedDateKeys.push(key);
-          if (mondayKey !== null && key >= mondayKey && key <= todayKey) {
-            weeklyCount++;
-            thisWeekDateKeys.add(key);
-          }
-        } catch (err) {
-          // Level/badge features degrade; the calendar grid still renders.
-        }
-      });
-      currentPlayedDateKeys = playedDateKeys;
-      currentWeeklyStats = { weeklyCount: weeklyCount, daysPlayedThisWeek: thisWeekDateKeys.size };
+      if (logs) logs.forEach(log => playedDays.add(new Date(log.created_at).getDate()));
 
       const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
       const totalDays = new Date(year, month + 1, 0).getDate();
@@ -768,88 +454,43 @@
         cell.innerText = day;
         daysContainer.appendChild(cell);
       }
-
-      updateDailyReminder(playedDateKeys);
     }
 
-    async function loadLeaderboard() {
-      const box = document.getElementById('leaderboard-box');
-      
-      const { data: topStudents } = await db
-        .from('profiles')
-        .select('full_name, stars, streak')
-        .eq('role', 'student')
-        .eq('is_approved', true)
-        .or('is_banned.is.null,is_banned.eq.false')
-        .order('streak', { ascending: false })
-        .order('stars', { ascending: false })
-        .limit(5);
+async function loadLeaderboard() {
+  const box = document.getElementById('leaderboard-box');
+  
+  // Načteme pouze schválené a NEZABANOVANÉ žáky
+  const { data: topStudents } = await db
+    .from('profiles')
+    .select('full_name, stars, streak, is_banned, is_approved')
+    .eq('role', 'student')
+    .eq('is_approved', true)           // Pouze schválení
+    .or('is_banned.is.null,is_banned.eq.false') // Pouze nezabanovaní
+    .order('streak', { ascending: false })
+    .order('stars', { ascending: false })
+    .limit(5);
 
-      if (!topStudents || topStudents.length === 0) {
-        box.innerHTML = '<em>Zatím bez dat.</em>';
-        return;
-      }
+  if (!topStudents || topStudents.length === 0) {
+    box.innerHTML = '<em>Zatím bez dat.</em>';
+    return;
+  }
 
-      box.innerHTML = '';
-      topStudents.forEach((s, idx) => {
-        const item = document.createElement('div');
-        item.className = 'leader-item';
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-        item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
-        box.appendChild(item);
-      });
-    }
-
-    async function loadWeeklyLeague() {
-      const box = document.getElementById('weekly-league-box');
-      if (!box) return;
-
-      try {
-        const now = new Date();
-        const dayOfWeek = (now.getDay() + 6) % 7;
-        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-
-        const { data: profiles } = await db.from('profiles').select('id, full_name').eq('role', 'student').eq('is_approved', true).or('is_banned.is.null,is_banned.eq.false');
-        const { data: weeklyLogs } = await db.from('practice_logs').select('user_id, created_at').gte('created_at', monday.toISOString());
-
-        if (!profiles || profiles.length === 0) {
-          box.innerHTML = '<em>Zatím bez dat.</em>';
-          return;
-        }
-
-        const countByUser = {};
-        (weeklyLogs || []).forEach(log => {
-          countByUser[log.user_id] = (countByUser[log.user_id] || 0) + 1;
-        });
-
-        const entries = profiles.map(p => ({ name: p.full_name || 'Žák', weeklyCount: countByUser[p.id] || 0 }));
-        const league = KHGame.computeWeeklyLeague(entries).slice(0, 5);
-
-        if (league.length === 0) {
-          box.innerHTML = '<em>Tento týden zatím nikdo necvičil.</em>';
-          return;
-        }
-
-        const tierIcon = { gold: '🥇', silver: '🥈', bronze: '🥉' };
-        box.innerHTML = '';
-        league.forEach(entry => {
-          const item = document.createElement('div');
-          item.className = 'leader-item';
-          item.innerHTML = `<span>${tierIcon[entry.tier] || ''} <strong>${entry.name}</strong></span> <span>${entry.weeklyCount}x tento týden</span>`;
-          box.appendChild(item);
-        });
-      } catch (err) {
-        console.warn('Weekly league failed to load:', err);
-        box.innerHTML = '<em>Týdenní liga není dostupná.</em>';
-      }
-    }
+  box.innerHTML = '';
+  topStudents.forEach((s, idx) => {
+    const item = document.createElement('div');
+    item.className = 'leader-item';
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${"‎ ‎ " + (idx + 1) + "‎"}.`;
+    item.innerHTML = `<span>${medal} <strong>${s.full_name || 'Žák'}</strong></span> <span>🔥 ${s.streak || 0} (⭐${s.stars || 0})</span>`;
+    box.appendChild(item);
+  });
+}
 
     async function loadMyComments() {
       const box = document.getElementById('my-comments-box');
       const { data: logs } = await db.from('practice_logs').select('*').eq('user_id', currentUser.id).not('teacher_comment', 'is', null).order('created_at', { ascending: false });
 
       if (!logs || logs.length === 0) {
-        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--text-muted);">Zatím nemáš žádné komentáře od učitele.</em>';
+        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--muted-text);">Zatím nemáš žádné komentáře od učitele.</em>';
         return;
       }
 
@@ -874,7 +515,7 @@
         .limit(5);
 
       if (!logs || logs.length === 0) {
-        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--text-muted);">Zatím nemáš žádné nahrané cvičení.</em>';
+        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--muted-text);">Zatím nemáš žádné nahrané cvičení.</em>';
         return;
       }
 
@@ -882,7 +523,7 @@
       logs.forEach((log, index) => {
         const dateObj = new Date(log.created_at);
         const dateStr = dateObj.toLocaleDateString('cs-CZ') + ' ' + dateObj.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-
+        
         const div = document.createElement('div');
         div.className = 'recent-rec-item';
         div.innerHTML = `
@@ -904,15 +545,17 @@
 
       let newsList = [];
 
+      // 1. Zprávy o komentářích od učitele
       if (logs) {
         logs.forEach(log => {
-          const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
           if (log.teacher_comment) {
+            const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
             newsList.push({
               date: new Date(log.created_at),
               text: `💬 <strong>Učitel okomentoval nahrávku z ${dateStr}:</strong> "${log.teacher_comment}"`
             });
           } else {
+            const dateStr = new Date(log.created_at).toLocaleDateString('cs-CZ');
             newsList.push({
               date: new Date(log.created_at),
               text: `✅ Nahrávka z ${dateStr} byla v pořádku doručena učiteli.`
@@ -921,6 +564,7 @@
         });
       }
 
+      // 2. Stavové informace o profilu (streak a hvězdy)
       if (profile) {
         if (profile.streak > 0) {
           newsList.push({
@@ -936,10 +580,11 @@
         }
       }
 
+      // Srovnáme novinky podle data (nejnovější nahoře)
       newsList.sort((a, b) => b.date - a.date);
 
       if (newsList.length === 0) {
-        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--text-muted);">Zatím zde nejsou žádné nové zprávy.</em>';
+        box.innerHTML = '<em style="font-size: 0.8rem; color: var(--muted-text);">Zatím zde nejsou žádné nové zprávy.</em>';
         return;
       }
 
@@ -952,180 +597,9 @@
       });
     }
 
-    let visualizerAudioCtx = null;
-    let analyserNode = null;
-    let visualizerDataArray = null;
-    let visualizerRafId = null;
-
-    function initVisualizer(stream) {
-      try {
-        visualizerAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = visualizerAudioCtx.createMediaStreamSource(stream);
-        analyserNode = visualizerAudioCtx.createAnalyser();
-        analyserNode.fftSize = 64;
-        source.connect(analyserNode);
-        visualizerDataArray = new Uint8Array(analyserNode.frequencyBinCount);
-      } catch (err) {
-        // Web Audio unavailable/blocked — recording still works, just without the visualizer.
-        analyserNode = null;
-      }
-    }
-
-    function startVisualizer() {
-      const canvas = document.getElementById('visualizer');
-      if (!canvas || !analyserNode) return;
-      canvas.classList.remove('hidden');
-      const ctx = canvas.getContext('2d');
-
-      function draw() {
-        analyserNode.getByteFrequencyData(visualizerDataArray);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const barCount = 16;
-        const barWidth = canvas.width / barCount;
-        for (let i = 0; i < barCount; i++) {
-          const value = visualizerDataArray[i] || 0;
-          const barHeight = (value / 255) * canvas.height;
-          ctx.fillStyle = '#ff2ec4';
-          ctx.fillRect(i * barWidth + 2, canvas.height - barHeight, barWidth - 4, barHeight);
-        }
-        visualizerRafId = requestAnimationFrame(draw);
-      }
-      draw();
-    }
-
-    function stopVisualizer() {
-      const canvas = document.getElementById('visualizer');
-      if (canvas) canvas.classList.add('hidden');
-      if (visualizerRafId) {
-        cancelAnimationFrame(visualizerRafId);
-        visualizerRafId = null;
-      }
-    }
-
-    function getMascotStorageKey() {
-      return 'kh_mascot_' + currentUser.id;
-    }
-
-    function getSelectedMascotId(unlockedSkins) {
-      try {
-        const saved = localStorage.getItem(getMascotStorageKey());
-        if (saved && unlockedSkins.some(s => s.id === saved)) return saved;
-      } catch (err) {
-        // localStorage unavailable — fall back to the default skin.
-      }
-      return unlockedSkins[0] ? unlockedSkins[0].id : 'noticka';
-    }
-
-    function selectMascotSkin(skinId, level) {
-      try {
-        localStorage.setItem(getMascotStorageKey(), skinId);
-      } catch (err) {
-        // localStorage unavailable — selection just won't persist across reloads.
-      }
-      applyMascotSkin(level);
-    }
-
-    function applyMascotSkin(level) {
-      try {
-        const unlockedSkins = KHGame.computeUnlockedSkins(level);
-        const selectedId = getSelectedMascotId(unlockedSkins);
-        const selectedSkin = unlockedSkins.find(s => s.id === selectedId) || unlockedSkins[0];
-
-        const mascotEl = document.getElementById('mascot');
-        if (mascotEl && selectedSkin) mascotEl.innerText = selectedSkin.icon;
-
-        const picker = document.getElementById('mascot-picker');
-        if (!picker) return;
-        picker.innerHTML = '';
-        KHGame.MASCOT_SKINS.forEach(skin => {
-          const unlocked = unlockedSkins.some(s => s.id === skin.id);
-          const opt = document.createElement('div');
-          opt.className = 'mascot-option' + (unlocked ? ' unlocked' : '') + (skin.id === selectedId ? ' selected' : '');
-          opt.innerText = skin.icon;
-          opt.title = unlocked ? skin.label : `Odemkne se na levelu ${skin.unlockLevel}`;
-          if (unlocked) opt.onclick = () => selectMascotSkin(skin.id, level);
-          picker.appendChild(opt);
-        });
-      } catch (err) {
-        console.warn('Mascot skin rendering failed:', err);
-      }
-    }
-
-    function getOnboardingStorageKey() {
-      return 'kh_onboarded_' + currentUser.id;
-    }
-
-    function hasSeenOnboarding() {
-      try {
-        return localStorage.getItem(getOnboardingStorageKey()) === 'true';
-      } catch (err) {
-        return true; // Storage unavailable — don't force onboarding on every load.
-      }
-    }
-
-    function markOnboardingSeen() {
-      try {
-        localStorage.setItem(getOnboardingStorageKey(), 'true');
-      } catch (err) {
-        // localStorage unavailable — onboarding may show again next time; harmless.
-      }
-    }
-
-    const ONBOARDING_STEPS = [
-      { title: '🎤 Nahrávej cvičení', text: 'Stiskni mikrofon, zahraj a stiskni ho znovu pro odeslání učiteli.' },
-      { title: '🔥 Udržuj řadu', text: 'Kalendář ukazuje dny, kdy jsi cvičil/a. Cvič každý den a drž si denní řadu!' },
-      { title: '⭐ Sbírej odznaky a levely', text: 'Za pravidelné cvičení dostáváš hvězdičky od učitele, level a odznaky.' }
-    ];
-
-    let onboardingStepIndex = 0;
-
-    function maybeShowOnboarding() {
-      try {
-        if (hasSeenOnboarding()) return;
-        onboardingStepIndex = 0;
-        renderOnboardingStep();
-      } catch (err) {
-        console.warn('Onboarding failed to render:', err);
-      }
-    }
-
-    function renderOnboardingStep() {
-      const existing = document.getElementById('kh-onboarding-overlay');
-      if (existing) existing.remove();
-
-      const step = ONBOARDING_STEPS[onboardingStepIndex];
-      const isLast = onboardingStepIndex === ONBOARDING_STEPS.length - 1;
-
-      const overlay = document.createElement('div');
-      overlay.id = 'kh-onboarding-overlay';
-      overlay.className = 'kh-levelup-overlay';
-      overlay.innerHTML = `
-        <div class="kh-levelup-card kh-onboarding-card">
-          <div style="font-size:1.2rem; margin-bottom:10px;">${step.title}</div>
-          <div style="font-size:0.9rem; font-weight:normal; margin-bottom:16px;">${step.text}</div>
-          <button class="btn btn-primary" id="kh-onboarding-next">${isLast ? 'Rozumím!' : 'Další'}</button>
-        </div>
-      `;
-      overlay.onclick = (e) => { if (e.target === overlay) advanceOnboarding(); };
-      document.body.appendChild(overlay);
-      document.getElementById('kh-onboarding-next').onclick = advanceOnboarding;
-    }
-
-    function advanceOnboarding() {
-      onboardingStepIndex++;
-      if (onboardingStepIndex >= ONBOARDING_STEPS.length) {
-        markOnboardingSeen();
-        const overlay = document.getElementById('kh-onboarding-overlay');
-        if (overlay) overlay.remove();
-        return;
-      }
-      renderOnboardingStep();
-    }
-
     async function setupAudioRecording() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        initVisualizer(stream);
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
@@ -1148,33 +622,20 @@
             const { error: dbError } = await db.from('practice_logs').insert([{ user_id: currentUser.id, audio_url: publicUrlData.publicUrl }]);
             if (dbError) throw dbError;
 
-            // Zobrazíme zelený text a změníme mikrofon na stav 3 (zelený - .sent)
             statusText.innerText = "Nahrávka odeslána učiteli!";
             statusText.style.color = "#2ecc71";
             recBtn.classList.add('sent');
+            
+            await loadUserProfile();
+            await renderCalendar();
+            await loadLeaderboard();
+            await loadRecentRecordings();
+            await loadNews();
+
           } catch (err) {
             statusText.innerText = "Chyba při ukládání nahrávky";
             statusText.style.color = "#ff3b30";
             recBtn.classList.remove('sent');
-            return;
-          }
-
-          // Post-success celebration + refresh. The recording is already saved at this point,
-          // so a failure here must never overwrite the success message shown above.
-          try {
-            document.getElementById('mascot').classList.add('celebrating');
-            setTimeout(() => document.getElementById('mascot').classList.remove('celebrating'), 700);
-            fireConfetti();
-            playFanfare();
-
-            await renderCalendar();
-            await loadUserProfile();
-            await loadLeaderboard();
-            await loadWeeklyLeague();
-            await loadRecentRecordings();
-            await loadNews();
-          } catch (err) {
-            console.warn('Post-upload celebration/refresh failed:', err);
           }
         };
       } catch (err) {
@@ -1186,27 +647,21 @@
       if (!mediaRecorder) return alert('Mikrofon není připraven!');
       const btn = document.getElementById('record-btn');
       const statusText = document.getElementById('status-text');
-      const mascot = document.getElementById('mascot');
 
       if (!isRecording) {
         audioChunks = [];
         mediaRecorder.start();
         isRecording = true;
-
-        // Resetujeme stav odesláno a aktivujeme nahrávání
+        
         btn.classList.remove('sent');
         btn.classList.add('recording');
-        mascot.classList.add('recording');
-        startVisualizer();
-
+        
         statusText.innerText = "Nahrávám...";
         statusText.style.color = "#ff3b30";
       } else {
         mediaRecorder.stop();
         isRecording = false;
         btn.classList.remove('recording');
-        mascot.classList.remove('recording');
-        stopVisualizer();
       }
     }
 
@@ -1215,12 +670,27 @@
       if (session) initApp(session.user);
     }
 
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('.btn') || e.target.closest('.btn-step')) {
-        playClickTone();
+    /* Přepínání světlého / tmavého režimu */
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('kh-theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('kh-theme', 'dark');
       }
-    });
+      updateThemeIcon();
+    }
 
+    function updateThemeIcon() {
+      const btn = document.getElementById('theme-toggle');
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    updateThemeIcon();
     checkSession();
   </script>
 </body>
