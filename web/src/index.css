@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-heading: 'Poppins', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+
+  --color-bg: #0b0818;
+  --color-bg-card: #1b2062;
+  --color-bg-card-alt: #241c3d;
+
+  --color-periwinkle: #bf40fa;
+  --color-periwinkle-dark: #4928c2;
+  --color-magenta: #e02f75;
+  --color-magenta-dark: #a81f58;
+  --color-coral: #ff5a57;
+  --color-coral-dark: #c23a38;
+
+  --color-xp-pink: #fccbf0;
+  --color-text-primary: #f8f5ff;
+  --color-text-muted: #9186b8;
+  --color-border: #3a2f5c;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+    background: radial-gradient(
+      circle at 25% 15%,
+      #3a1b6e 0%,
+      #1b2062 38%,
+      #0b0818 72%,
+      #040607 100%
+    );
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+}
