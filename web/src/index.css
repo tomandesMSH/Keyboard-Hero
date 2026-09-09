@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-heading: 'Poppins', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+
+  --color-bg: #f6f4f1;
+  --color-bg-card: #e4ded2;
+  --color-bg-card-alt: #edeae5;
+
+  --color-coral: #f95c4b;
+  --color-coral-dark: #e14432;
+  --color-coral-tint: #fde0db;
+  --color-ink: #0a0a0a;
+
+  --color-text-primary: #0a0a0a;
+  --color-text-muted: #8c8578;
+  --color-border: #dcd5c7;
+
+  /* Fixed light color for text/icons on coral or ink surfaces (buttons,
+     badges, avatars, toasts, ...) — intentionally NOT redefined by .dark
+     below. Those surfaces stay coral/ink in both themes, so the light
+     foreground on them must stay light too; using --color-bg for this (as
+     some components used to) broke once --color-bg itself went dark. */
+  --color-cream: #f6f4f1;
+}
+
+/* Dark mode: toggled by adding .dark to <html> (see lib/theme.ts). Tailwind's
+   generated utilities (bg-bg, text-text-primary, ...) read these custom
+   properties at runtime, so overriding them here re-themes the whole app
+   without touching individual components. */
+.dark {
+  --color-bg: #17181b;
+  --color-bg-card: #212327;
+  --color-bg-card-alt: #26282c;
+
+  --color-text-primary: #f2f3f4;
+  --color-text-muted: #9aa0a6;
+  --color-border: #33363b;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+}
+
+/* "Clay" (soft embossed) shadows from the design mockup — a raised outer
+   shadow paired with an inset highlight/shadow on the same edge. */
+@layer components {
+  .shadow-clay {
+    box-shadow:
+      7px 7px 16px rgba(0, 0, 0, 0.12),
+      -5px -5px 12px rgba(255, 255, 255, 0.9),
+      inset 1.5px 1.5px 1.5px rgba(255, 255, 255, 0.7),
+      inset -2.5px -2.5px 5px rgba(0, 0, 0, 0.1);
+  }
+  .shadow-clay-sm {
+    box-shadow:
+      4px 4px 9px rgba(0, 0, 0, 0.1),
+      -3px -3px 7px rgba(255, 255, 255, 0.85),
+      inset 1px 1px 1px rgba(255, 255, 255, 0.65),
+      inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.08);
+  }
+  .shadow-clay-press {
+    box-shadow:
+      inset 3px 3px 7px rgba(0, 0, 0, 0.1),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.6);
+  }
+  .dark .shadow-clay {
+    box-shadow:
+      7px 7px 16px rgba(0, 0, 0, 0.45),
+      -5px -5px 12px rgba(255, 255, 255, 0.05),
+      inset 1.5px 1.5px 1.5px rgba(255, 255, 255, 0.18),
+      inset -2.5px -2.5px 5px rgba(0, 0, 0, 0.35);
+  }
+  .dark .shadow-clay-sm {
+    box-shadow:
+      4px 4px 9px rgba(0, 0, 0, 0.4),
+      -3px -3px 7px rgba(255, 255, 255, 0.04),
+      inset 1px 1px 1px rgba(255, 255, 255, 0.16),
+      inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.3);
+  }
+  .dark .shadow-clay-press {
+    box-shadow:
+      inset 3px 3px 7px rgba(0, 0, 0, 0.4),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.06);
+  }
+}
