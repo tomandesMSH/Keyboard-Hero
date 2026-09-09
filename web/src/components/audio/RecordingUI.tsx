@@ -33,7 +33,7 @@ export function RecordingUI({ onRecorded }: RecordingUIProps) {
       </div>
       <button
         className={`w-20 h-20 rounded-full bg-coral shadow-clay flex items-center justify-center ${
-          status === 'recording' ? 'ring-8 ring-coral-tint animate-pulse' : ''
+          status === 'recording' ? 'ring-8 ring-coral-tint animate-pulse motion-reduce:animate-none' : ''
         }`}
         aria-label={status === 'recording' ? 'Zastavit nahrávání' : 'Spustit nahrávání'}
         onClick={status === 'recording' ? stop : start}

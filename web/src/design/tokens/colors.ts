@@ -11,6 +11,7 @@ export const colors = {
   ink: '#0A0A0A',
 
   textPrimary: '#0A0A0A',
-  textMuted: '#8C8578',
+  // Kept in sync with --color-text-muted in src/index.css (WCAG AA fix).
+  textMuted: '#625B4F',
   border: '#DCD5C7',
 } as const

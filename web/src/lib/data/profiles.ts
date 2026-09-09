@@ -25,6 +25,14 @@ export async function approveStudent(studentId: string): Promise<void> {
   if (error) throw error
 }
 
+export async function updateShareBasicProgress(userId: string, shareBasicProgress: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ share_basic_progress: shareBasicProgress })
+    .eq('id', userId)
+  if (error) throw error
+}
+
 // Deletes a student's profile, their practice logs, and their uploaded
 // recordings. Does NOT delete their auth.users login — that requires the
 // Supabase service-role key, which the browser must never have, so a

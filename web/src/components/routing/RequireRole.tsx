@@ -6,8 +6,6 @@ import { PendingApproval } from '../../screens/student/PendingApproval'
 import { PendingVerification } from '../../screens/teacher/PendingVerification'
 import { BannedScreen } from '../../screens/BannedScreen'
 
-// Parent doesn't have a home screen yet (no parent portal was built — see
-// the GDPR/consent simplification for a single-school deployment).
 export function roleHome(role: UserRole): string {
   switch (role) {
     case 'teacher':

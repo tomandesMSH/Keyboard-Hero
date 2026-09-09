@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'teacher' | 'parent' | 'moderator'
+export type UserRole = 'student' | 'teacher' | 'moderator'
 
 export interface Profile {
   id: string
@@ -22,6 +22,13 @@ export interface Profile {
   // Moderator access, independent of role — a teacher can also hold this.
   // Absent until migration 0012 is applied.
   is_moderator?: boolean
+  // Opt-in for a teacher to see this student's non-assigned practice logs
+  // (spec 5.3). Absent until migration 0014 is applied.
+  share_basic_progress?: boolean
+  // Streak freeze bookkeeping (spec 4.3). Absent until migration 0015 is
+  // applied.
+  streak_freezes_available?: number
+  last_practice_date?: string | null
 }
 
 export interface Classroom {

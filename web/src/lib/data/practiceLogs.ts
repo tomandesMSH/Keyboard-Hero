@@ -108,6 +108,25 @@ export async function insertPracticeLog(userId: string, audioUrl: string, assign
   if (error) throw error
 }
 
+export interface PracticeSessionResult {
+  stars: number
+  streak: number
+  streakFreezesAvailable: number
+}
+
+// Awards a star and updates streak (consuming a freeze if a single day was
+// missed) atomically server-side. Call once per submitted recording.
+export async function recordPracticeSession(userId: string): Promise<PracticeSessionResult> {
+  const { data, error } = await supabase.rpc('record_practice_session', { p_user_id: userId })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  return {
+    stars: row.stars,
+    streak: row.streak,
+    streakFreezesAvailable: row.streak_freezes_available,
+  }
+}
+
 // Which of the given assignment ids already have a submitted recording
 // from this student.
 export async function fetchCompletedAssignmentIds(userId: string, assignmentIds: string[]): Promise<Set<string>> {

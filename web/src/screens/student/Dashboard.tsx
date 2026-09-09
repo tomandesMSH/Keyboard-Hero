@@ -7,13 +7,14 @@ import { XPDisplay } from '../../components/gamification/XPDisplay'
 import { LevelProgress } from '../../components/gamification/LevelProgress'
 import { DailyReminderBanner } from '../../components/gamification/DailyReminderBanner'
 import { Confetti } from '../../components/gamification/Confetti'
+import { Quests } from '../../components/gamification/Quests'
 import { LessonCard } from '../../components/lessons/LessonCard'
 import { AppShell } from '../../components/layout/AppShell'
 import { useAuth } from '../../lib/AuthProvider'
 import { useQuery } from '../../lib/data/useQuery'
 import { fetchCompletedAssignmentIds, fetchOwnLogsCount, fetchWeeklyStats } from '../../lib/data/practiceLogs'
 import { fetchStudentAssignments } from '../../lib/data/classrooms'
-import { isPerfectWeek, hasPlayedToday } from '../../lib/game-logic'
+import { isPerfectWeek, hasPlayedToday, computeQuests } from '../../lib/game-logic'
 import { detectNewUnlocks } from '../../lib/gamification/detectNewUnlocks'
 import { useToast } from '../../lib/useToast'
 import type { Assignment } from '../../lib/data/types'
@@ -73,6 +74,7 @@ export function StudentDashboard() {
 
   const playedToday = weekly.data ? hasPlayedToday(weekly.data.dateKeys, today) : false
   const firstName = profile.full_name?.split(' ')[0] || 'žáku'
+  const quests = computeQuests({ playedToday, weeklyCount: weekly.data?.weeklyCount ?? 0 })
 
   function openAssignment(assignment: Assignment) {
     navigate('/student/recording', {
@@ -92,7 +94,7 @@ export function StudentDashboard() {
         <div className="flex items-center justify-between">
           <h1 className="text-xl">Ahoj, {firstName}! 👋</h1>
           <div className="flex items-center gap-2">
-            <Streak count={profile.streak} />
+            <Streak count={profile.streak} freezesAvailable={profile.streak_freezes_available} />
             <XPDisplay xp={profile.stars} />
           </div>
         </div>
@@ -128,6 +130,8 @@ export function StudentDashboard() {
         <Card>
           <LevelProgress stars={profile.stars} />
         </Card>
+
+        <Quests quests={quests} />
       </div>
     </AppShell>
   )

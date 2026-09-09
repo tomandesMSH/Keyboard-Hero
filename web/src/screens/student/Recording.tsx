@@ -4,7 +4,13 @@ import { RecordingUI } from '../../components/audio/RecordingUI'
 import { Toast } from '../../components/ui/Toast'
 import { Confetti } from '../../components/gamification/Confetti'
 import { useAuth } from '../../lib/AuthProvider'
-import { uploadRecording, insertPracticeLog, fetchOwnLogsCount, fetchWeeklyStats } from '../../lib/data/practiceLogs'
+import {
+  uploadRecording,
+  insertPracticeLog,
+  recordPracticeSession,
+  fetchOwnLogsCount,
+  fetchWeeklyStats,
+} from '../../lib/data/practiceLogs'
 import { isPerfectWeek } from '../../lib/game-logic'
 import { detectNewUnlocks } from '../../lib/gamification/detectNewUnlocks'
 import { useToast } from '../../lib/useToast'
@@ -20,7 +26,7 @@ export function Recording() {
   const navigate = useNavigate()
   const location = useLocation()
   const { lessonTitle, instructions, assignmentId } = (location.state ?? {}) as LocationState
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const { message, show } = useToast()
   const [uploading, setUploading] = useState(false)
   const [celebrating, setCelebrating] = useState(false)
@@ -31,6 +37,7 @@ export function Recording() {
     try {
       const audioUrl = await uploadRecording(profile.id, blob)
       await insertPracticeLog(profile.id, audioUrl, assignmentId)
+      const session = await recordPracticeSession(profile.id)
       show('Nahrávka odeslána ke kontrole')
 
       const today = new Date()
@@ -38,14 +45,15 @@ export function Recording() {
         fetchOwnLogsCount(profile.id),
         fetchWeeklyStats(profile.id, today),
       ])
-      const result = detectNewUnlocks(profile.id, profile.stars, {
-        stars: profile.stars,
-        streak: profile.streak,
+      const result = detectNewUnlocks(profile.id, session.stars, {
+        stars: session.stars,
+        streak: session.streak,
         totalRecordings: logsCount,
         perfectWeek: isPerfectWeek(weekly.dateKeys, today),
         daysPlayedThisWeek: weekly.dateKeys.length,
         weeklyCount: weekly.weeklyCount,
       })
+      refreshProfile()
       if (result.newLevel || result.newBadgeIds.length > 0) {
         setCelebrating(true)
         setTimeout(() => setCelebrating(false), 2500)

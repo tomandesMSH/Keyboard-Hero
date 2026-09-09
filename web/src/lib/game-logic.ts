@@ -178,3 +178,41 @@ export function isPerfectWeek(playedDateKeys: string[], today: Date): boolean {
 export function hasPlayedToday(playedDateKeys: string[], today: Date): boolean {
   return playedDateKeys.includes(toDateKey(today))
 }
+
+export interface QuestContext {
+  playedToday: boolean
+  weeklyCount: number
+}
+
+export interface QuestResult {
+  id: string
+  label: string
+  icon: string
+  current: number
+  target: number
+  completed: boolean
+}
+
+const WEEKLY_QUEST_TARGET = 5
+
+export function computeQuests(ctx: QuestContext): QuestResult[] {
+  const weeklyCount = Math.max(0, ctx.weeklyCount || 0)
+  return [
+    {
+      id: 'daily-practice',
+      label: 'Procvič dnes alespoň jednou',
+      icon: '🎯',
+      current: ctx.playedToday ? 1 : 0,
+      target: 1,
+      completed: ctx.playedToday,
+    },
+    {
+      id: 'weekly-stars',
+      label: `Získej ${WEEKLY_QUEST_TARGET}x hvězdičku tento týden`,
+      icon: '⭐',
+      current: Math.min(weeklyCount, WEEKLY_QUEST_TARGET),
+      target: WEEKLY_QUEST_TARGET,
+      completed: weeklyCount >= WEEKLY_QUEST_TARGET,
+    },
+  ]
+}

@@ -8,7 +8,7 @@ export function Confetti({ active }: { active: boolean }) {
       {Array.from({ length: 40 }).map((_, i) => (
         <span
           key={i}
-          className="absolute top-[-10px] w-2 h-2 rounded-sm animate-bounce"
+          className="absolute top-[-10px] w-2 h-2 rounded-sm animate-bounce motion-reduce:animate-none"
           style={{
             left: `${Math.random() * 100}%`,
             background: COLORS[i % COLORS.length],

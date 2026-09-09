@@ -15,6 +15,11 @@ const AuthContext = createContext<AuthState | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
+  // Distinguishes "genuinely logged out" from "haven't checked yet" — without
+  // it, a hard reload briefly renders as logged out before the async
+  // getSession() below resolves, which bounces RequireRole to /login and
+  // loses whatever deep link (e.g. /student/profile) the user had open.
+  const [sessionLoaded, setSessionLoaded] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshTick, setRefreshTick] = useState(0)
@@ -22,14 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
+      setSessionLoaded(true)
     })
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
+      setSessionLoaded(true)
     })
     return () => subscription.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
+    if (!sessionLoaded) return
     if (!session) {
       setProfile(null)
       setLoading(false)
@@ -50,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [session, refreshTick])
+  }, [session, sessionLoaded, refreshTick])
 
   return (
     <AuthContext.Provider

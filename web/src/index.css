@@ -15,7 +15,11 @@
   --color-ink: #0a0a0a;
 
   --color-text-primary: #0a0a0a;
-  --color-text-muted: #8c8578;
+  /* #8c8578 (the original stone tone) only hit ~3.3:1 against --color-bg and
+     ~4.4:1 against --color-bg-card — both under WCAG AA's 4.5:1 for normal
+     text. Darkened to #625b4f, which clears 4.5:1 against every background
+     token this class is actually painted on. */
+  --color-text-muted: #625b4f;
   --color-border: #dcd5c7;
 
   /* Fixed light color for text/icons on coral or ink surfaces (buttons,

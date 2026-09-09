@@ -13,14 +13,17 @@ import { computeBadges, computeLevel, computeUnlockedSkins, isPerfectWeek } from
 import { signOut } from '../../lib/auth'
 import { applyTheme, getStoredTheme } from '../../lib/theme'
 import { useToast } from '../../lib/useToast'
+import { updateShareBasicProgress } from '../../lib/data/profiles'
+import { getErrorMessage } from '../../lib/errors'
 
 export function Profile() {
   const navigate = useNavigate()
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const userId = profile?.id
   const [today] = useState(() => new Date())
   const [darkMode, setDarkMode] = useState(() => getStoredTheme() === 'dark')
   const [pairingOpen, setPairingOpen] = useState(false)
+  const [savingShare, setSavingShare] = useState(false)
   const { message, show } = useToast()
 
   const logsCount = useQuery(
@@ -54,6 +57,19 @@ export function Profile() {
     show('Tahle funkce se ještě připravuje.')
   }
 
+  async function toggleShareBasicProgress(next: boolean) {
+    if (!userId) return
+    setSavingShare(true)
+    try {
+      await updateShareBasicProgress(userId, next)
+      refreshProfile()
+    } catch (err) {
+      show(getErrorMessage(err, 'Uložení se nepovedlo, zkus to znovu.'))
+    } finally {
+      setSavingShare(false)
+    }
+  }
+
   async function handleLogout() {
     await signOut()
     navigate('/login', { replace: true })
@@ -71,7 +87,14 @@ export function Profile() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          <StatCard value={`${profile.streak} dní`} label="Aktuální streak" />
+          <StatCard
+            value={`${profile.streak} dní`}
+            label={
+              profile.streak_freezes_available
+                ? `Aktuální streak · 🧊${profile.streak_freezes_available}`
+                : 'Aktuální streak'
+            }
+          />
           <StatCard value={String(profile.stars)} label="Celkem XP" />
           <StatCard value={String(logsCount.data ?? '—')} label="Dokončené nahrávky" />
           <StatCard value={String(weekly.data?.weeklyCount ?? '—')} label="Tento týden" />
@@ -114,6 +137,12 @@ export function Profile() {
 
         <div>
           <h2 className="text-sm font-heading font-semibold mb-1">Ochrana osobních údajů</h2>
+          <SettingsRow
+            label="Sdílet učiteli i samostatné procvičování"
+            right={
+              <Switch checked={!!profile.share_basic_progress} onChange={toggleShareBasicProgress} disabled={savingShare} />
+            }
+          />
           <SettingsRow
             label="Souhlas se zpracováním"
             right={

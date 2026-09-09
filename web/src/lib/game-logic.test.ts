@@ -171,6 +171,30 @@ describe('computeWeeklyLeague', () => {
   })
 })
 
+describe('computeQuests', () => {
+  it('daily quest completes only when played today', () => {
+    const notPlayed = KHGame.computeQuests({ playedToday: false, weeklyCount: 0 })
+    const played = KHGame.computeQuests({ playedToday: true, weeklyCount: 0 })
+    expect(notPlayed.find((q) => q.id === 'daily-practice')?.completed).toBe(false)
+    expect(played.find((q) => q.id === 'daily-practice')?.completed).toBe(true)
+  })
+
+  it('weekly quest completes at 5 stars this week, progress caps at target', () => {
+    const below = KHGame.computeQuests({ playedToday: false, weeklyCount: 3 })
+    const at = KHGame.computeQuests({ playedToday: false, weeklyCount: 5 })
+    const over = KHGame.computeQuests({ playedToday: false, weeklyCount: 9 })
+    expect(below.find((q) => q.id === 'weekly-stars')?.completed).toBe(false)
+    expect(below.find((q) => q.id === 'weekly-stars')?.current).toBe(3)
+    expect(at.find((q) => q.id === 'weekly-stars')?.completed).toBe(true)
+    expect(over.find((q) => q.id === 'weekly-stars')?.current).toBe(5)
+  })
+
+  it('negative weeklyCount is clamped to 0', () => {
+    const quests = KHGame.computeQuests({ playedToday: false, weeklyCount: -3 })
+    expect(quests.find((q) => q.id === 'weekly-stars')?.current).toBe(0)
+  })
+})
+
 describe('computeUnlockedSkins', () => {
   it('level 1 unlocks only the first skin, higher levels unlock more', () => {
     const atLevel1 = KHGame.computeUnlockedSkins(1)
