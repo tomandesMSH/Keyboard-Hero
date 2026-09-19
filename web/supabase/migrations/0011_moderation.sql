@@ -4,21 +4,21 @@
 -- practice_logs never recorded WHO graded it (submitGrading only touched
 -- rating/feedback columns), so there was no way to know which teacher a
 -- report about "feedback on this recording" was actually about. Adding
--- graded_by fixes that going forward — recordings graded before this
+-- graded_by fixes that going forward - recordings graded before this
 -- migration will have it null.
 --
 -- Moderator accounts don't have a signup path (same as the original
--- 'admin' role) — create one the same way we created the manual teacher
+-- 'admin' role) - create one the same way we created the manual teacher
 -- account: Authentication → Users → Add user, then set role='moderator'
 -- (and is_verified/is_approved as you see fit) on their profiles row.
 --
 -- Note: practice_logs.id is bigint (unlike every other table in this
--- migration, which use uuid) — checked against the live schema after the
+-- migration, which use uuid) - checked against the live schema after the
 -- first version of this file failed with a type-mismatch error trying to
 -- reference it as uuid.
 --
 -- Run this manually in the Supabase SQL editor for the project referenced
--- in web/.env.local — it is not applied automatically.
+-- in web/.env.local - it is not applied automatically.
 
 alter table practice_logs add column if not exists graded_by uuid references profiles(id);
 
@@ -65,7 +65,7 @@ create policy "Moderator spravuje nahlaseni" on reported_content
   with check (is_moderator());
 
 -- Lets a moderator actually suspend/reinstate an account (flip
--- is_banned) — mirrors the existing is_admin() blanket-write policy on
+-- is_banned) - mirrors the existing is_admin() blanket-write policy on
 -- profiles rather than introducing a narrower column-level grant, so it's
 -- consistent with (if just as broad as) what's already there.
 create policy "Moderator spravuje ucty" on profiles
@@ -74,13 +74,13 @@ create policy "Moderator spravuje ucty" on profiles
   with check (is_moderator());
 
 -- A moderator needs to see reporter/reported-user names to make sense of a
--- queue entry — mirrors is_admin()'s existing blanket profile-read grant.
+-- queue entry - mirrors is_admin()'s existing blanket profile-read grant.
 create policy "Moderator cte profily" on profiles
   for select
   using (is_moderator());
 
 -- Existing practice_logs policies only let a teacher (is_admin()) or the
--- student themselves read a recording — a moderator had no way to actually
+-- student themselves read a recording - a moderator had no way to actually
 -- listen to what was reported. Scoped to only rows that have been
 -- reported, not blanket access to every student's recordings.
 create policy "Moderator cte nahlasene nahravky" on practice_logs

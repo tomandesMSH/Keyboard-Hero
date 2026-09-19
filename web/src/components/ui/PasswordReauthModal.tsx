@@ -40,7 +40,7 @@ export function PasswordReauthModal({ open, onSuccess, onCancel }: PasswordReaut
       <form className="space-y-4" onSubmit={handleSubmit}>
         <h2 className="font-heading font-semibold text-lg">Potvrď svoje heslo</h2>
         <p className="text-text-muted text-sm">
-          Tahle akce je nevratná — ověř prosím svoje heslo, než budeš pokračovat. Pro zbytek session se už ptát
+          Tahle akce je nevratná - ověř prosím svoje heslo, než budeš pokračovat. Pro zbytek session se už ptát
           nebudeme.
         </p>
         <Input

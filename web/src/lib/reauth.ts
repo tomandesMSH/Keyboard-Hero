@@ -15,6 +15,6 @@ export function markReauthed(): void {
   try {
     sessionStorage.setItem(REAUTH_KEY, '1')
   } catch {
-    // Storage unavailable — will just re-prompt next time, which is safe.
+    // Storage unavailable - will just re-prompt next time, which is safe.
   }
 }

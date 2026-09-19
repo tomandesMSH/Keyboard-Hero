@@ -12,14 +12,14 @@ export interface Profile {
   // Generic account ban, any role.
   is_banned: boolean
   // Teacher identity verification (spec 5.5). Absent until migration 0003 is
-  // applied — treat as unverified if so.
+  // applied - treat as unverified if so.
   is_verified?: boolean
   // GDPR consent (spec 1.3). Absent until migration 0006 is applied.
   date_of_birth?: string | null
   consent_given?: boolean
   consent_guardian_name?: string | null
   consent_given_at?: string | null
-  // Moderator access, independent of role — a teacher can also hold this.
+  // Moderator access, independent of role - a teacher can also hold this.
   // Absent until migration 0012 is applied.
   is_moderator?: boolean
   // Opt-in for a teacher to see this student's non-assigned practice logs

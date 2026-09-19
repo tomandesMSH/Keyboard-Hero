@@ -1,6 +1,6 @@
 const COLORS = ['#F95C4B', '#E14432', '#0A0A0A', '#FDE0DB', '#8C8578']
 
-// Placeholder shell — wired up properly when the celebration flow is built.
+// Placeholder shell - wired up properly when the celebration flow is built.
 export function Confetti({ active }: { active: boolean }) {
   if (!active) return null
   return (

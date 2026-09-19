@@ -117,7 +117,7 @@ export interface LeagueResult extends LeagueEntry {
   rank: number
 }
 
-// Students with weeklyCount 0 are excluded — a league only makes sense
+// Students with weeklyCount 0 are excluded - a league only makes sense
 // among people who actually practiced this week.
 export function computeWeeklyLeague(entries: LeagueEntry[] | undefined): LeagueResult[] {
   const active = (entries || []).filter((e) => e && e.weeklyCount > 0)

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 
-// Toast itself is a dumb presentational component with no dismiss timer —
+// Toast itself is a dumb presentational component with no dismiss timer -
 // this hook owns the auto-dismiss behavior so every screen doesn't repeat it.
 export function useToast(durationMs = 2900) {
   const [message, setMessage] = useState<string>()

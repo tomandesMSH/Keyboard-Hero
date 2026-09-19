@@ -1,4 +1,4 @@
-// "Alternativní paleta 3" — Paper / Stone / Coral / Black (minimalistická).
+// "Alternativní paleta 3" - Paper / Stone / Coral / Black (minimalistická).
 
 export const colors = {
   bg: '#F6F4F1',

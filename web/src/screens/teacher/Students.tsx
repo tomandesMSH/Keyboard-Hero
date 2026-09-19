@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { Toast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { PasswordReauthModal } from '../../components/ui/PasswordReauthModal'
+import { ResetPasswordModal } from '../../components/ui/ResetPasswordModal'
 import { AppShell } from '../../components/layout/AppShell'
 import { useQuery } from '../../lib/data/useQuery'
 import { approveStudent, deleteStudent, fetchStudents } from '../../lib/data/profiles'
@@ -22,6 +23,7 @@ export function Students() {
   const [deleting, setDeleting] = useState<string>()
   const [reauthOpen, setReauthOpen] = useState(false)
   const [confirmTarget, setConfirmTarget] = useState<Profile>()
+  const [resetTarget, setResetTarget] = useState<Profile>()
   const { message, show } = useToast()
 
   const query = search.trim().toLowerCase()
@@ -45,6 +47,11 @@ export function Students() {
 
   function requestDelete(student: Profile) {
     setConfirmTarget(student)
+    if (!isReauthed()) setReauthOpen(true)
+  }
+
+  function requestReset(student: Profile) {
+    setResetTarget(student)
     if (!isReauthed()) setReauthOpen(true)
   }
 
@@ -77,6 +84,14 @@ export function Students() {
     )
   }
 
+  function renderResetButton(student: Profile) {
+    return (
+      <Button variant="ghost" className="shrink-0 !px-3 !py-1.5 text-xs" onClick={() => requestReset(student)}>
+        Nové heslo
+      </Button>
+    )
+  }
+
   return (
     <AppShell role="teacher">
       {message && <Toast message={message} />}
@@ -85,9 +100,17 @@ export function Students() {
         onCancel={() => {
           setReauthOpen(false)
           setConfirmTarget(undefined)
+          setResetTarget(undefined)
         }}
         onSuccess={() => setReauthOpen(false)}
       />
+      {!reauthOpen && resetTarget && (
+        <ResetPasswordModal
+          userId={resetTarget.id}
+          name={resetTarget.full_name}
+          onClose={() => setResetTarget(undefined)}
+        />
+      )}
       <ConfirmDialog
         open={!reauthOpen && !!confirmTarget}
         title="Smazat profil žáka?"
@@ -163,7 +186,10 @@ export function Students() {
                     </div>
                   </div>
                 </button>
-                {renderDeleteButton(student)}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {renderResetButton(student)}
+                  {renderDeleteButton(student)}
+                </div>
               </div>
             ))}
           </div>

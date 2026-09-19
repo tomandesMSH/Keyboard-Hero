@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  // Distinguishes "genuinely logged out" from "haven't checked yet" — without
+  // Distinguishes "genuinely logged out" from "haven't checked yet" - without
   // it, a hard reload briefly renders as logged out before the async
   // getSession() below resolves, which bounces RequireRole to /login and
   // loses whatever deep link (e.g. /student/profile) the user had open.

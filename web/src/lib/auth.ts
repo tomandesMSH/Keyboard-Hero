@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-// The app has no real email addresses — usernames are shimmed into an
+// The app has no real email addresses - usernames are shimmed into an
 // internal fake domain, same convention the previous vanilla app used.
 // Teachers use the same shim as students; there is no real-email auth path.
 export function makeInternalEmail(username: string): string {
@@ -19,7 +19,7 @@ export async function signIn(username: string, password: string) {
 
 export interface StudentConsentInfo {
   dateOfBirth: string
-  // Only set for minors (see needsGuardianConsent) — an adult student
+  // Only set for minors (see needsGuardianConsent) - an adult student
   // consents for themselves.
   guardianName?: string
 }
@@ -71,7 +71,28 @@ export async function signOut() {
   if (error) throw error
 }
 
-// Re-checks the current user's own password before a destructive action —
+// Sets a new password for another account. There are no real emails to send
+// a reset link to, so a teacher (for students) or moderator (for teachers)
+// does it for them - the permission check lives in the admin_reset_password
+// SQL function (migration 0020), not here.
+export async function adminResetPassword(userId: string, newPassword: string) {
+  const { error } = await supabase.rpc('admin_reset_password', {
+    p_user_id: userId,
+    p_new_password: newPassword,
+  })
+  if (error) throw error
+}
+
+// Letters and digits that can't be confused when read aloud or off a screen
+// (no i/l/o, no 0/1) - the teacher hands this to a child in person.
+const TEMP_PASSWORD_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
+
+export function generateTempPassword(length = 8): string {
+  const bytes = crypto.getRandomValues(new Uint32Array(length))
+  return Array.from(bytes, (b) => TEMP_PASSWORD_ALPHABET[b % TEMP_PASSWORD_ALPHABET.length]).join('')
+}
+
+// Re-checks the current user's own password before a destructive action -
 // signing in again against the same account throws if the password is
 // wrong, and just refreshes the (identical) session if it's right.
 export async function reauthenticate(email: string, password: string) {

@@ -27,13 +27,13 @@ function writeState(userId: string, state: UnlockState): void {
   try {
     localStorage.setItem(STORAGE_PREFIX + userId, JSON.stringify(state))
   } catch {
-    // localStorage unavailable (private mode) — persistence is best-effort only.
+    // localStorage unavailable (private mode) - persistence is best-effort only.
   }
 }
 
 // Compares current level/badges against what was last seen (in localStorage)
 // for this user and reports what's newly unlocked. On the very first call for
-// a user (no stored baseline yet) nothing is reported as "new" — we're only
+// a user (no stored baseline yet) nothing is reported as "new" - we're only
 // seeding the baseline, not celebrating pre-existing progress.
 export function detectNewUnlocks(userId: string, stars: number, badgeCtx: BadgeContext): DetectResult {
   const level = computeLevel(stars).level

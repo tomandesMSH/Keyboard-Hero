@@ -13,6 +13,12 @@ export async function fetchStudents(): Promise<Profile[]> {
   return (data ?? []) as Profile[]
 }
 
+export async function fetchTeachers(): Promise<Profile[]> {
+  const { data, error } = await supabase.from('profiles').select('*').eq('role', 'teacher')
+  if (error) throw error
+  return (data ?? []) as Profile[]
+}
+
 export async function fetchProfilesByIds(ids: string[]): Promise<Profile[]> {
   if (ids.length === 0) return []
   const { data, error } = await supabase.from('profiles').select('*').in('id', ids)
@@ -34,7 +40,7 @@ export async function updateShareBasicProgress(userId: string, shareBasicProgres
 }
 
 // Deletes a student's profile, their practice logs, and their uploaded
-// recordings. Does NOT delete their auth.users login — that requires the
+// recordings. Does NOT delete their auth.users login - that requires the
 // Supabase service-role key, which the browser must never have, so a
 // deleted student can still authenticate but immediately bounces back to
 // the login screen once their profile is gone (see RequireRole).

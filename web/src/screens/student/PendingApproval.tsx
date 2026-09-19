@@ -25,7 +25,7 @@ export function PendingApproval() {
       <div className="text-4xl">⏳</div>
       <h1 className="text-xl">Čekáš na schválení</h1>
       <p className="text-text-muted text-sm">
-        Tvůj účet ještě musí schválit učitel. Jakmile tě schválí, dashboard se ti odemkne — zkus to zatím zkontrolovat
+        Tvůj účet ještě musí schválit učitel. Jakmile tě schválí, dashboard se ti odemkne - zkus to zatím zkontrolovat
         znovu, nebo se stav zeptej svého učitele.
       </p>
       <Button className="w-full" onClick={handleRefresh} disabled={checking}>

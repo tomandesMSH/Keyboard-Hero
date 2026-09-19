@@ -15,6 +15,6 @@ export function applyTheme(theme: Theme) {
   try {
     localStorage.setItem(STORAGE_KEY, theme)
   } catch {
-    // Storage unavailable (private browsing, etc.) — theme just won't persist.
+    // Storage unavailable (private browsing, etc.) - theme just won't persist.
   }
 }

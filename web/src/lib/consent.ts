@@ -1,6 +1,6 @@
 // GDPR (čl. 8) vyžaduje souhlas zákonného zástupce pro děti pod touto
 // hranicí; skutečná hranice se liší dle členského státu EU (13–16 let).
-// 16 je nejpřísnější běžná hodnota — bezpečná výchozí volba, dokud se
+// 16 je nejpřísnější běžná hodnota - bezpečná výchozí volba, dokud se
 // nerozhodne jinak (právně, ne čistě technicky).
 export const AGE_OF_CONSENT = 16
 

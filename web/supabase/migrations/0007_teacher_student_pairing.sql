@@ -1,11 +1,11 @@
 -- Real teacher-student pairing (spec 5.6), simplified for this app's
 -- architecture: since GDPR consent is already captured at registration
 -- (migration 0006), there's no separate async "wait for parent consent"
--- step here — redeeming a valid invite code activates the link
+-- step here - redeeming a valid invite code activates the link
 -- immediately, no pending_invite state needed.
 --
 -- Run this manually in the Supabase SQL editor for the project referenced
--- in web/.env.local — it is not applied automatically.
+-- in web/.env.local - it is not applied automatically.
 
 create table if not exists invite_codes (
   code text primary key,
@@ -86,7 +86,7 @@ create policy "Zak maze sve propojeni" on teacher_student_links
   for delete using (student_id = auth.uid());
 
 -- Existing profiles RLS lets a teacher read any profile (is_admin()) but
--- only lets everyone else read their own row — so without this, a student
+-- only lets everyone else read their own row - so without this, a student
 -- couldn't see their linked teacher's name at all. Adds to (not replaces)
 -- the existing "Povolit čtení profilu" policy; Postgres OR's permissive
 -- policies together.

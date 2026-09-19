@@ -7,7 +7,7 @@ interface QueryState<T> {
   refetch: () => void
 }
 
-// Minimal fetch-on-mount hook — deliberately not a caching library, the app
+// Minimal fetch-on-mount hook - deliberately not a caching library, the app
 // is small enough that per-screen refetching is fine.
 export function useQuery<T>(fn: () => Promise<T>, deps: unknown[]): QueryState<T> {
   const [data, setData] = useState<T>()

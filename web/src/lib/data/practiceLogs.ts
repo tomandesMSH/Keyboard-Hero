@@ -101,6 +101,19 @@ export async function uploadRecording(userId: string, blob: Blob): Promise<strin
   return data.publicUrl
 }
 
+// Deletes the recording itself (best-effort - an already-missing storage
+// object shouldn't block removing the row) and its practice_logs row.
+export async function deletePracticeLog(log: PracticeLog): Promise<void> {
+  const marker = `/${RECORDINGS_BUCKET}/`
+  const markerIndex = log.audio_url.indexOf(marker)
+  if (markerIndex !== -1) {
+    await supabase.storage.from(RECORDINGS_BUCKET).remove([log.audio_url.slice(markerIndex + marker.length)])
+  }
+
+  const { error } = await supabase.from('practice_logs').delete().eq('id', log.id)
+  if (error) throw error
+}
+
 export async function insertPracticeLog(userId: string, audioUrl: string, assignmentId?: string): Promise<void> {
   const { error } = await supabase
     .from('practice_logs')

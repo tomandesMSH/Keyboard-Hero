@@ -3,10 +3,11 @@ import { useLocation } from 'react-router-dom'
 import { AudioPlayer } from '../../components/audio/AudioPlayer'
 import { Button } from '../../components/ui/Button'
 import { Toast } from '../../components/ui/Toast'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { AppShell } from '../../components/layout/AppShell'
 import { AssignToStudentModal } from '../../components/classrooms/AssignToStudentModal'
 import { useQuery } from '../../lib/data/useQuery'
-import { fetchPendingReview, fetchStudentLogs, submitGrading } from '../../lib/data/practiceLogs'
+import { deletePracticeLog, fetchPendingReview, fetchStudentLogs, submitGrading } from '../../lib/data/practiceLogs'
 import { fetchStudents } from '../../lib/data/profiles'
 import { useToast } from '../../lib/useToast'
 import { useAuth } from '../../lib/AuthProvider'
@@ -34,6 +35,8 @@ export function Grading() {
   const [feedbackImprove, setFeedbackImprove] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const { message, show } = useToast()
 
   function nameFor(userId: string): string {
@@ -45,6 +48,21 @@ export function Grading() {
     setRating(log.rating ?? 0)
     setFeedbackGood(log.feedback_good ?? '')
     setFeedbackImprove(log.feedback_improve ?? '')
+  }
+
+  async function handleDelete() {
+    if (!selectedLog) return
+    setDeleteConfirmOpen(false)
+    setDeleting(true)
+    try {
+      await deletePracticeLog(selectedLog)
+      show('Nahrávka byla smazána')
+      setSelectedLog(undefined)
+      logs.refetch()
+    } catch (err) {
+      show(getErrorMessage(err, 'Smazání se nepovedlo, zkus to znovu.'))
+      setDeleting(false)
+    }
   }
 
   async function handleSubmit() {
@@ -74,9 +92,27 @@ export function Grading() {
     return (
       <div className="max-w-md md:max-w-lg mx-auto p-5 space-y-4">
         {message && <Toast message={message} />}
-        <button className="text-sm text-text-muted" onClick={() => setSelectedLog(undefined)}>
-          ← Zpět na seznam
-        </button>
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          title="Smazat nahrávku?"
+          message="Nahrávka a s ní spojené hodnocení se nenávratně smažou."
+          confirmLabel="Smazat"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteConfirmOpen(false)}
+        />
+        <div className="flex items-center justify-between gap-2">
+          <button className="text-sm text-text-muted" onClick={() => setSelectedLog(undefined)}>
+            ← Zpět na seznam
+          </button>
+          <Button
+            variant="destructive"
+            className="!px-3 !py-1.5 text-xs shrink-0"
+            disabled={deleting}
+            onClick={() => setDeleteConfirmOpen(true)}
+          >
+            Smazat nahrávku
+          </Button>
+        </div>
         <div>
           <h1 className="text-xl">Hodnocení nahrávky</h1>
           <p className="text-text-muted text-sm">{nameFor(selectedLog.user_id)}</p>
@@ -129,7 +165,7 @@ export function Grading() {
       <div className="space-y-4 flex-1">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl">
-            {state.studentId ? `Nahrávky — ${nameFor(state.studentId)}` : 'Ke kontrole'}
+            {state.studentId ? `Nahrávky - ${nameFor(state.studentId)}` : 'Ke kontrole'}
           </h1>
           {state.studentId && (
             <Button className="!px-3 !py-1.5 text-xs shrink-0" onClick={() => setAssignOpen(true)}>

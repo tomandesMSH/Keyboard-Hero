@@ -10,4 +10,4 @@ Učitel má samostatný administrátorský panel, kde nahrávky poslouchá, hodn
 ## Vývoj
 
 Aplikace se staví jako React + TypeScript + Vite + Tailwind projekt (Supabase backend) ve
-[`web/`](web/) — viz [`web/README.md`](web/README.md) pro instalaci a spuštění.
+[`web/`](web/) - viz [`web/README.md`](web/README.md) pro instalaci a spuštění.

@@ -63,7 +63,7 @@ export function AssignToStudentModal({ open, studentId, studentName, onClose, on
         {!classrooms.loading && options.length === 0 && (
           <>
             <p className="text-text-muted text-sm">
-              {studentName} zatím není v žádné tvé učebně — nejdřív žáka přidej přes kód v sekci Učebny.
+              {studentName} zatím není v žádné tvé učebně - nejdřív žáka přidej přes kód v sekci Učebny.
             </p>
             <Button variant="ghost" className="w-full" onClick={onClose}>
               Zavřít

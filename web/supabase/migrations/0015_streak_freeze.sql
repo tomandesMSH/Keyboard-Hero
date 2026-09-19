@@ -1,18 +1,18 @@
 -- Real streak/stars accrual plus streak freeze (spec 4.3). Until now
 -- profiles.stars and profiles.streak were never written by any app code or
--- trigger — they only held whatever a row was seeded with. This migration
+-- trigger - they only held whatever a row was seeded with. This migration
 -- adds the missing state and a single RPC that the client calls once per
 -- submitted recording to update both atomically (avoids a read-modify-write
 -- race between two tabs/devices).
 --
 -- Freeze allowance resets to 1 at the start of each calendar month (server
--- UTC date — a per-user timezone is out of scope for now, documented
+-- UTC date - a per-user timezone is out of scope for now, documented
 -- simplification). A freeze only bridges exactly one missed day; a gap of
 -- two or more missed days still resets the streak to 1, same as Duolingo's
 -- model referenced in the spec.
 --
 -- Run this manually in the Supabase SQL editor for the project referenced
--- in web/.env.local — it is not applied automatically.
+-- in web/.env.local - it is not applied automatically.
 
 alter table profiles
   add column if not exists streak_freezes_available smallint not null default 1,

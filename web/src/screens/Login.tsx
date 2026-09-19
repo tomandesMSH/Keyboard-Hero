@@ -8,7 +8,7 @@ import { applyTheme, getStoredTheme } from '../lib/theme'
 import { needsGuardianConsent } from '../lib/consent'
 import { getErrorMessage } from '../lib/errors'
 
-type Mode = 'login' | 'register'
+type Mode = 'login' | 'register' | 'forgot'
 type Portal = 'student' | 'teacher'
 
 export function Login() {
@@ -83,7 +83,7 @@ export function Login() {
         <button
           type="button"
           className={`flex-1 py-2.5 rounded-full text-xs font-heading font-semibold transition ${
-            mode === 'login' ? 'bg-ink text-cream shadow-clay-sm' : 'bg-bg-card-alt text-text-muted shadow-clay-press'
+            mode !== 'register' ? 'bg-ink text-cream shadow-clay-sm' : 'bg-bg-card-alt text-text-muted shadow-clay-press'
           }`}
           onClick={() => setMode('login')}
         >
@@ -123,6 +123,31 @@ export function Login() {
         </div>
       )}
 
+      {mode === 'forgot' ? (
+        <div className="space-y-4">
+          <h2 className="font-heading font-semibold text-lg">Zapomněli jste heslo?</h2>
+          <p className="text-sm text-text-muted">
+            Muzio nepracuje s e-maily, takže si heslo nemůžeš obnovit sám. Nové ti nastaví někdo, kdo tě zná:
+          </p>
+          <ul className="space-y-2 text-sm">
+            <li className="rounded-2xl bg-bg-card shadow-clay-sm p-3.5">
+              <span className="font-heading font-semibold">Žák</span> - požádej svého učitele. Ve své sekci Žáci ti
+              nastaví nové heslo.
+            </li>
+            <li className="rounded-2xl bg-bg-card shadow-clay-sm p-3.5">
+              <span className="font-heading font-semibold">Učitel</span> - požádej správce appky (moderátora), který ti
+              heslo nastaví.
+            </li>
+          </ul>
+          <p className="text-xs text-text-muted">
+            Pověz jim své uživatelské jméno. Nové heslo ti předají osobně a po přihlášení už s ním můžeš normálně
+            pracovat.
+          </p>
+          <Button type="button" className="w-full" onClick={() => setMode('login')}>
+            Zpět na přihlášení
+          </Button>
+        </div>
+      ) : (
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <div className="text-xs font-semibold text-text-muted mb-1.5">Uživatelské jméno</div>
@@ -161,6 +186,20 @@ export function Login() {
             required
           />
         </div>
+        {mode === 'login' && (
+          <div className="text-right -mt-2">
+            <button
+              type="button"
+              className="text-xs text-text-muted underline underline-offset-2 hover:text-text-primary"
+              onClick={() => {
+                setError(undefined)
+                setMode('forgot')
+              }}
+            >
+              Zapomněli jste heslo?
+            </button>
+          </div>
+        )}
         {isStudentRegistration && dateOfBirth && isMinor && (
           <div>
             <div className="text-xs font-semibold text-text-muted mb-1.5">Jméno zákonného zástupce</div>
@@ -197,6 +236,7 @@ export function Login() {
           {mode === 'login' ? 'Přihlásit se' : 'Zaregistrovat se'}
         </Button>
       </form>
+      )}
 
       {mode === 'register' && portal === 'teacher' && (
         <p className="text-text-muted text-xs mt-4 text-center">

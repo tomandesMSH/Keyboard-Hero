@@ -3,7 +3,7 @@ interface WaveformProps {
   // Real amplitude data (0-255 per bar, e.g. from AnalyserNode.getByteFrequencyData).
   // Falls back to a static decorative pattern when omitted.
   levels?: number[]
-  // Playback progress 0..1 — colors bars up to this fraction as "played".
+  // Playback progress 0..1 - colors bars up to this fraction as "played".
   progress?: number
 }
 

@@ -96,8 +96,8 @@ export function Profile() {
             }
           />
           <StatCard value={String(profile.stars)} label="Celkem XP" />
-          <StatCard value={String(logsCount.data ?? '—')} label="Dokončené nahrávky" />
-          <StatCard value={String(weekly.data?.weeklyCount ?? '—')} label="Tento týden" />
+          <StatCard value={String(logsCount.data ?? '-')} label="Dokončené nahrávky" />
+          <StatCard value={String(weekly.data?.weeklyCount ?? '-')} label="Tento týden" />
         </div>
 
         <div>

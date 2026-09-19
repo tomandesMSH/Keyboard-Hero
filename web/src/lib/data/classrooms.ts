@@ -30,13 +30,18 @@ export async function fetchTeacherClassrooms(teacherId: string): Promise<Classro
   return (data ?? []) as Classroom[]
 }
 
+export async function deleteClassroom(classroomId: string): Promise<void> {
+  const { error } = await supabase.from('classrooms').delete().eq('id', classroomId)
+  if (error) throw error
+}
+
 export async function fetchClassroomMemberIds(classroomId: string): Promise<string[]> {
   const { data, error } = await supabase.from('classroom_members').select('student_id').eq('classroom_id', classroomId)
   if (error) throw error
   return (data ?? []).map((row) => row.student_id as string)
 }
 
-// Which of this teacher's own classrooms a given student is a member of —
+// Which of this teacher's own classrooms a given student is a member of -
 // used to scope "assign a task to this student" to a classroom they can
 // actually see it in (assignments are always classroom-scoped).
 export async function fetchStudentClassroomsForTeacher(teacherId: string, studentId: string): Promise<Classroom[]> {
@@ -64,7 +69,7 @@ export async function removeClassroomMember(classroomId: string, studentId: stri
   if (error) throw error
 }
 
-// A student never sees the roster (see 0009 migration) — only the
+// A student never sees the roster (see 0009 migration) - only the
 // classrooms they belong to.
 export async function fetchStudentClassrooms(studentId: string): Promise<Classroom[]> {
   const { data, error } = await supabase
@@ -133,7 +138,7 @@ export async function fetchClassroomAssignments(classroomId: string): Promise<As
 }
 
 // RLS on the assignments table already only returns rows this student is
-// meant to see (whole-classroom or individually targeted) — no client-side
+// meant to see (whole-classroom or individually targeted) - no client-side
 // filtering needed here.
 export async function fetchStudentAssignments(): Promise<Assignment[]> {
   const { data, error } = await supabase.from('assignments').select('*').order('created_at', { ascending: false })

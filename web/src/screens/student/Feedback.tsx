@@ -33,7 +33,7 @@ export function Feedback() {
         description,
       })
       setReportTarget(undefined)
-      show('Nahlášeno — podívá se na to moderátor.')
+      show('Nahlášeno - podívá se na to moderátor.')
     } catch (err) {
       setReportError(getErrorMessage(err, 'Nahlášení se nepovedlo, zkus to znovu.'))
     } finally {
@@ -51,7 +51,7 @@ export function Feedback() {
           <p className="text-sm text-coral-dark">Načtení nahrávek se nepovedlo: {logs.error.message}</p>
         )}
         {logs.data?.length === 0 && (
-          <p className="text-text-muted text-sm">Ještě jsi nic nenahrál/a — zkus to na Dashboardu.</p>
+          <p className="text-text-muted text-sm">Ještě jsi nic nenahrál/a - zkus to na Dashboardu.</p>
         )}
 
         <div className="space-y-3">

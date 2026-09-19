@@ -2,15 +2,15 @@
 -- 0007/0008 entirely: a teacher creates a classroom, students join with a
 -- code, and everything (progress visibility, assignments) scopes off
 -- classroom membership instead of a 1:1 link. Progress sharing is
--- automatic for classroom members — no opt-out toggle, that was a product
+-- automatic for classroom members - no opt-out toggle, that was a product
 -- decision, not a technical one.
 --
 -- The old invite_codes / teacher_student_links tables are left in place
--- (unused) rather than dropped — say the word if you want a follow-up
+-- (unused) rather than dropped - say the word if you want a follow-up
 -- migration to remove them once nothing needs that history.
 --
 -- Run this manually in the Supabase SQL editor for the project referenced
--- in web/.env.local — it is not applied automatically.
+-- in web/.env.local - it is not applied automatically.
 
 create table if not exists classrooms (
   id uuid primary key default gen_random_uuid(),
@@ -65,7 +65,7 @@ create policy "Zak vidi ucebny kde je clenem" on classrooms
     where cm.classroom_id = classrooms.id and cm.student_id = auth.uid()
   ));
 
--- classroom_members — students get NO select policy here at all. That's
+-- classroom_members - students get NO select policy here at all. That's
 -- the "students don't see each other" requirement: even querying their own
 -- membership row would, under a normal policy, let them list every other
 -- row in the same classroom_id. Joining goes through join_classroom()
@@ -77,7 +77,7 @@ create policy "Ucitel spravuje cleny svych ucemen" on classroom_members
   using (exists (select 1 from classrooms c where c.id = classroom_members.classroom_id and c.teacher_id = auth.uid()))
   with check (exists (select 1 from classrooms c where c.id = classroom_members.classroom_id and c.teacher_id = auth.uid()));
 
--- A student can read (and delete) only their OWN row here — never a
+-- A student can read (and delete) only their OWN row here - never a
 -- classmate's. That's what actually delivers "students don't see each
 -- other": row-level filtering on student_id, not a blanket absence of any
 -- select policy (which would have also blocked a student from confirming
@@ -99,10 +99,10 @@ create policy "Ucitel spravuje ukoly ve svych ucebnach" on assignments
 -- assignment_has_recipients / assignment_targets_me are SECURITY DEFINER on
 -- purpose: without them, the policy below would need to subquery
 -- assignment_recipients directly, which is itself RLS-protected to "only
--- your own row" for students — so a plain EXISTS from inside another row's
+-- your own row" for students - so a plain EXISTS from inside another row's
 -- policy could never see OTHER students' targeting rows and would treat
 -- every targeted assignment as untargeted. (This is exactly the bug fixed
--- in 0008 for invite_codes — same shape, so fixed properly up front here.)
+-- in 0008 for invite_codes - same shape, so fixed properly up front here.)
 create or replace function assignment_has_recipients(p_assignment_id uuid)
 returns boolean
 language sql
@@ -146,7 +146,7 @@ create policy "Zak cte vlastni cilene ukoly" on assignment_recipients
 
 -- Joining a classroom goes through this function (not a direct insert),
 -- so the join_code never has to be exposed through a broadly-readable
--- SELECT policy on classrooms — a student who doesn't know the code has no
+-- SELECT policy on classrooms - a student who doesn't know the code has no
 -- way to discover or browse other classrooms at all.
 create or replace function join_classroom(p_code text)
 returns uuid

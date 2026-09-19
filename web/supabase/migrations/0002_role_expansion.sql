@@ -11,19 +11,19 @@
 -- teacher if this migration only renamed the data:
 --   - is_admin() (SECURITY DEFINER function), used by the two `profiles`
 --     RLS policies ("Povolit čtení profilu", "Povolit úpravu profilu").
---     Fixed with CREATE OR REPLACE — those two policies call the function
+--     Fixed with CREATE OR REPLACE - those two policies call the function
 --     by name and don't need to change themselves.
 --   - 4 RLS policies that inline role = 'admin' directly: 3 on
---     practice_logs (SELECT/UPDATE/DELETE — this is what backs Grading.tsx
+--     practice_logs (SELECT/UPDATE/DELETE - this is what backs Grading.tsx
 --     and the teacher dashboard's pending-review queue) and 1 on
 --     storage.objects (DELETE, recordings bucket). Fixed with
 --     ALTER POLICY ... USING (...), which swaps the expression with no
 --     window where the policy doesn't exist (unlike DROP + CREATE).
 --
 -- Run this manually in the Supabase SQL editor for the project referenced
--- in web/.env.local — it is not applied automatically.
+-- in web/.env.local - it is not applied automatically.
 
--- 1) Migrate existing data first — the CHECK constraint added in step 2
+-- 1) Migrate existing data first - the CHECK constraint added in step 2
 --    would otherwise reject any row still holding 'admin'.
 update profiles set role = 'teacher' where role = 'admin';
 
@@ -32,7 +32,7 @@ alter table profiles
   add constraint profiles_role_check
   check (role in ('student', 'teacher', 'parent', 'moderator'));
 
--- 3) is_admin() — used by the profiles RLS policies.
+-- 3) is_admin() - used by the profiles RLS policies.
 create or replace function public.is_admin()
 returns boolean
 language plpgsql
@@ -49,7 +49,7 @@ $function$;
 
 -- 4) practice_logs policies that inline role = 'admin'.
 --    Names kept as-is (still say "Admini") to minimize this migration's
---    footprint — cosmetic rename can happen separately if you want it.
+--    footprint - cosmetic rename can happen separately if you want it.
 alter policy "Admini mohou číst všechny nahrávky" on practice_logs
   using (
     (auth.uid() = user_id)
@@ -69,6 +69,6 @@ alter policy "Admini mohou mazat soubory ze storage" on storage.objects
     and ((select profiles.role from profiles where profiles.id = auth.uid()) = 'teacher'::text)
   );
 
--- Sanity check after running the above — should show only 'teacher' (plus
+-- Sanity check after running the above - should show only 'teacher' (plus
 -- 'student' for everyone else), never 'admin':
 -- select distinct role from profiles;

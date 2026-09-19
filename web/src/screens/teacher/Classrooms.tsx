@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Avatar } from '../../components/ui/Avatar'
 import { Toast } from '../../components/ui/Toast'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { AppShell } from '../../components/layout/AppShell'
 import { NewAssignmentModal } from '../../components/classrooms/NewAssignmentModal'
 import { useAuth } from '../../lib/AuthProvider'
@@ -10,6 +11,7 @@ import { useQuery } from '../../lib/data/useQuery'
 import {
   createAssignment,
   createClassroom,
+  deleteClassroom,
   fetchClassroomAssignments,
   fetchClassroomMemberIds,
   fetchTeacherClassrooms,
@@ -46,7 +48,16 @@ export function Classrooms() {
   }
 
   if (selected) {
-    return <ClassroomDetail classroom={selected} onBack={() => setSelected(undefined)} />
+    return (
+      <ClassroomDetail
+        classroom={selected}
+        onBack={() => setSelected(undefined)}
+        onDeleted={() => {
+          setSelected(undefined)
+          classrooms.refetch()
+        }}
+      />
+    )
   }
 
   return (
@@ -62,7 +73,7 @@ export function Classrooms() {
         </form>
         {classrooms.loading && <p className="text-text-muted text-sm">Načítám…</p>}
         {classrooms.data?.length === 0 && (
-          <p className="text-text-muted text-sm">Zatím žádná třída — vytvoř první výše.</p>
+          <p className="text-text-muted text-sm">Zatím žádná třída - vytvoř první výše.</p>
         )}
         <div className="space-y-2.5 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
           {classrooms.data?.map((classroom) => (
@@ -83,7 +94,15 @@ export function Classrooms() {
   )
 }
 
-function ClassroomDetail({ classroom, onBack }: { classroom: Classroom; onBack: () => void }) {
+function ClassroomDetail({
+  classroom,
+  onBack,
+  onDeleted,
+}: {
+  classroom: Classroom
+  onBack: () => void
+  onDeleted: () => void
+}) {
   const memberIds = useQuery(() => fetchClassroomMemberIds(classroom.id), [classroom.id])
   const members = useQuery(
     () => (memberIds.data ? fetchProfilesByIds(memberIds.data) : Promise.resolve([])),
@@ -95,6 +114,22 @@ function ClassroomDetail({ classroom, onBack }: { classroom: Classroom; onBack: 
   const [assignmentOpen, setAssignmentOpen] = useState(false)
   const [assignmentSubmitting, setAssignmentSubmitting] = useState(false)
   const [assignmentError, setAssignmentError] = useState<string>()
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const canDelete = !!profile && (profile.id === classroom.teacher_id || profile.role === 'moderator' || profile.is_moderator)
+
+  async function handleDeleteClassroom() {
+    setDeleteConfirmOpen(false)
+    setDeleting(true)
+    try {
+      await deleteClassroom(classroom.id)
+      onDeleted()
+    } catch (err) {
+      show(getErrorMessage(err, 'Smazání třídy se nepovedlo.'))
+      setDeleting(false)
+    }
+  }
 
   async function handleCreateAssignment(input: { title: string; description: string; recipientIds: string[] }) {
     if (!profile) return
@@ -133,11 +168,23 @@ function ClassroomDetail({ classroom, onBack }: { classroom: Classroom; onBack: 
         <button className="text-sm text-text-muted" onClick={onBack}>
           ← Zpět na třídy
         </button>
-        <div>
-          <h1 className="text-xl">{classroom.name}</h1>
-          <p className="text-text-muted text-sm">
-            Kód pro připojení: <span className="font-heading font-bold tracking-widest">{classroom.join_code}</span>
-          </p>
+        <div className="flex items-start justify-between gap-2.5">
+          <div>
+            <h1 className="text-xl">{classroom.name}</h1>
+            <p className="text-text-muted text-sm">
+              Kód pro připojení: <span className="font-heading font-bold tracking-widest">{classroom.join_code}</span>
+            </p>
+          </div>
+          {canDelete && (
+            <Button
+              variant="destructive"
+              className="shrink-0 !px-3 !py-1.5 text-xs"
+              disabled={deleting}
+              onClick={() => setDeleteConfirmOpen(true)}
+            >
+              Smazat třídu
+            </Button>
+          )}
         </div>
 
         <div>
@@ -161,7 +208,7 @@ function ClassroomDetail({ classroom, onBack }: { classroom: Classroom; onBack: 
               </div>
             ))}
             {members.data?.length === 0 && (
-              <p className="text-text-muted text-sm">Zatím se nikdo nepřipojil — sdílej kód výše.</p>
+              <p className="text-text-muted text-sm">Zatím se nikdo nepřipojil - sdílej kód výše.</p>
             )}
           </div>
         </div>
@@ -194,6 +241,15 @@ function ClassroomDetail({ classroom, onBack }: { classroom: Classroom; onBack: 
         error={assignmentError}
         onClose={() => setAssignmentOpen(false)}
         onSubmit={handleCreateAssignment}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title="Smazat třídu?"
+        message={`Nenávratně smažeš třídu „${classroom.name}“ včetně všech úkolů. Žáci o třídu přijdou, jejich nahrávky a profily zůstanou zachovány.`}
+        confirmLabel="Smazat"
+        onConfirm={handleDeleteClassroom}
+        onCancel={() => setDeleteConfirmOpen(false)}
       />
     </AppShell>
   )
