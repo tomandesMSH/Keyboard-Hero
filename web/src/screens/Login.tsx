@@ -7,6 +7,7 @@ import { signIn, signUpStudent, signUpTeacher } from '../lib/auth'
 import { applyTheme, getStoredTheme } from '../lib/theme'
 import { needsGuardianConsent } from '../lib/consent'
 import { getErrorMessage } from '../lib/errors'
+import { isTeacherAdmin } from '../lib/roles'
 
 type Mode = 'login' | 'register' | 'forgot'
 type Portal = 'student' | 'teacher'
@@ -37,8 +38,14 @@ export function Login() {
 
   useEffect(() => {
     if (!authLoading && session && profile) {
-      const home =
-        profile.role === 'teacher' ? '/teacher' : profile.role === 'moderator' ? '/moderator' : '/student'
+      // A teacher who is also an admin picks a panel on every login.
+      const home = isTeacherAdmin(profile)
+        ? '/panel'
+        : profile.role === 'teacher'
+          ? '/teacher'
+          : profile.role === 'moderator'
+            ? '/moderator'
+            : '/student'
       navigate(home, { replace: true })
     }
   }, [authLoading, session, profile, navigate])

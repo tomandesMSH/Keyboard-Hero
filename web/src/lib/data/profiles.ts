@@ -13,10 +13,18 @@ export async function fetchStudents(): Promise<Profile[]> {
   return (data ?? []) as Profile[]
 }
 
-export async function fetchTeachers(): Promise<Profile[]> {
-  const { data, error } = await supabase.from('profiles').select('*').eq('role', 'teacher')
+// Every student and teacher account, for the admin dashboard. Dedicated
+// admin (role = 'moderator') accounts are left out - they are managed
+// outside the app.
+export async function fetchAllUsers(): Promise<Profile[]> {
+  const { data, error } = await supabase.from('profiles').select('*').in('role', ['student', 'teacher'])
   if (error) throw error
   return (data ?? []) as Profile[]
+}
+
+export async function setTeacherVerified(teacherId: string, verified: boolean): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ is_verified: verified }).eq('id', teacherId)
+  if (error) throw error
 }
 
 export async function fetchProfilesByIds(ids: string[]): Promise<Profile[]> {

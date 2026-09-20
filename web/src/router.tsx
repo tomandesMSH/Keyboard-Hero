@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { Login } from './screens/Login'
+import { ChoosePanel } from './screens/ChoosePanel'
 import { StudentDashboard } from './screens/student/Dashboard'
 import { Lessons } from './screens/student/Lessons'
 import { Recording } from './screens/student/Recording'
@@ -17,6 +18,7 @@ import { RequireModerator } from './components/routing/RequireModerator'
 export const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace /> },
   { path: '/login', element: <Login /> },
+  { path: '/panel', element: <ChoosePanel /> },
   {
     path: '/student',
     element: (

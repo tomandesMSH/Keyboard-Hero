@@ -16,7 +16,7 @@ import { signOut } from '../../lib/auth'
 import { isReauthed } from '../../lib/reauth'
 import { useToast } from '../../lib/useToast'
 import { getErrorMessage } from '../../lib/errors'
-import { TeachersSection } from './TeachersSection'
+import { UsersSection } from './UsersSection'
 import type { PracticeLog, Profile } from '../../lib/data/types'
 
 interface SuspendTarget {
@@ -25,7 +25,7 @@ interface SuspendTarget {
   name: string
 }
 
-type Tab = 'reports' | 'recordings' | 'teachers'
+type Tab = 'reports' | 'recordings' | 'users'
 
 export function Queue() {
   const navigate = useNavigate()
@@ -117,8 +117,8 @@ export function Queue() {
       />
 
       {profile?.role === 'teacher' && (
-        <button className="text-sm text-text-muted" onClick={() => navigate('/teacher')}>
-          ← Zpět na Dashboard
+        <button className="text-sm text-text-muted" onClick={() => navigate('/panel')}>
+          ← Změnit panel
         </button>
       )}
       <div className="flex items-center justify-between">
@@ -142,10 +142,10 @@ export function Queue() {
           Nahrávky
         </button>
         <button
-          className={`flex-1 rounded-lg py-2 text-sm font-heading font-semibold ${tab === 'teachers' ? 'bg-bg-card shadow-clay-sm' : 'text-text-muted'}`}
-          onClick={() => setTab('teachers')}
+          className={`flex-1 rounded-lg py-2 text-sm font-heading font-semibold ${tab === 'users' ? 'bg-bg-card shadow-clay-sm' : 'text-text-muted'}`}
+          onClick={() => setTab('users')}
         >
-          Učitelé
+          Uživatelé
         </button>
       </div>
 
@@ -213,7 +213,7 @@ export function Queue() {
       )}
 
       {tab === 'recordings' && <RecordingsSection />}
-      {tab === 'teachers' && <TeachersSection />}
+      {tab === 'users' && <UsersSection />}
     </div>
   )
 }
