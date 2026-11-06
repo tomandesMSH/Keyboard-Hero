@@ -46,6 +46,9 @@ export interface Assignment {
   title: string
   description: string | null
   created_at: string
+  // Teacher's real name, filled in client-side for students only
+  // (fetchStudentAssignments). Never the username.
+  teacher_name?: string | null
 }
 
 export interface PracticeLog {

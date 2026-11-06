@@ -64,6 +64,7 @@ export function Lessons() {
                   icon="🎵"
                   title={assignment.title}
                   meta={assignment.description ?? ''}
+                  teacherName={assignment.teacher_name}
                   badge={{ label: 'Čeká', tone: 'pending' }}
                   onClick={() => openAssignment(assignment)}
                 />
@@ -82,6 +83,7 @@ export function Lessons() {
                   icon="🎵"
                   title={assignment.title}
                   meta={assignment.description ?? ''}
+                  teacherName={assignment.teacher_name}
                   badge={{ label: 'Hotovo', tone: 'success' }}
                 />
               ))}

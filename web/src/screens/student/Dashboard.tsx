@@ -116,6 +116,7 @@ export function StudentDashboard() {
                   icon="🎵"
                   title={assignment.title}
                   meta={assignment.description ?? ''}
+                  teacherName={assignment.teacher_name}
                   badge={done ? { label: 'Hotovo', tone: 'success' } : { label: 'Čeká', tone: 'pending' }}
                   onClick={() => openAssignment(assignment)}
                 />

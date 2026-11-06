@@ -141,7 +141,18 @@ export async function fetchClassroomAssignments(classroomId: string): Promise<As
 // meant to see (whole-classroom or individually targeted) - no client-side
 // filtering needed here.
 export async function fetchStudentAssignments(): Promise<Assignment[]> {
-  const { data, error } = await supabase.from('assignments').select('*').order('created_at', { ascending: false })
-  if (error) throw error
-  return (data ?? []) as Assignment[]
+  const [assignmentsRes, teachersRes] = await Promise.all([
+    supabase.from('assignments').select('*').order('created_at', { ascending: false }),
+    // Only id + full_name (never username) - see migration 0022. A failure
+    // here (e.g. migration not applied yet) just hides the teacher name.
+    supabase.rpc('my_classroom_teacher_names'),
+  ])
+  if (assignmentsRes.error) throw assignmentsRes.error
+  const names = new Map<string, string>(
+    ((teachersRes.data ?? []) as { teacher_id: string; full_name: string }[]).map((t) => [t.teacher_id, t.full_name]),
+  )
+  return ((assignmentsRes.data ?? []) as Assignment[]).map((a) => ({
+    ...a,
+    teacher_name: names.get(a.teacher_id) ?? null,
+  }))
 }
