@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { RecordingUI } from '../../components/audio/RecordingUI'
 import { Toast } from '../../components/ui/Toast'
 import { Confetti } from '../../components/gamification/Confetti'
+import { AttachmentLink } from '../../components/lessons/AttachmentLink'
 import { useAuth } from '../../lib/AuthProvider'
 import {
   uploadRecording,
@@ -20,12 +21,14 @@ interface LocationState {
   lessonTitle?: string
   instructions?: string
   assignmentId?: string
+  attachmentPath?: string
+  attachmentName?: string
 }
 
 export function Recording() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { lessonTitle, instructions, assignmentId } = (location.state ?? {}) as LocationState
+  const { lessonTitle, instructions, assignmentId, attachmentPath, attachmentName } = (location.state ?? {}) as LocationState
   const { profile, refreshProfile } = useAuth()
   const { message, show } = useToast()
   const [uploading, setUploading] = useState(false)
@@ -75,6 +78,11 @@ export function Recording() {
       </button>
       <h1 className="text-xl mb-1.5">{lessonTitle ?? 'Nahrávání'}</h1>
       {instructions && <p className="text-text-muted text-xs leading-relaxed mb-2">{instructions}</p>}
+      {attachmentPath && (
+        <div className="mb-3">
+          <AttachmentLink assignment={{ attachment_path: attachmentPath, attachment_name: attachmentName ?? null }} />
+        </div>
+      )}
       <RecordingUI onRecorded={handleRecorded} />
       {uploading && <p className="text-center text-text-muted text-sm">Nahrávám…</p>}
     </div>

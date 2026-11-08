@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { ASSIGNMENT_FILES_BUCKET, attachmentContentType, attachmentPath } from '../attachments'
 import type { Assignment, Classroom } from './types'
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no ambiguous chars (0/O, 1/I)
@@ -31,6 +32,16 @@ export async function fetchTeacherClassrooms(teacherId: string): Promise<Classro
 }
 
 export async function deleteClassroom(classroomId: string): Promise<void> {
+  // The assignments go with the classroom (on delete cascade), their files
+  // don't: remove them first. Best-effort - a leftover file is only clutter.
+  const { data: withFiles } = await supabase
+    .from('assignments')
+    .select('attachment_path')
+    .eq('classroom_id', classroomId)
+    .not('attachment_path', 'is', null)
+  const paths = ((withFiles ?? []) as { attachment_path: string }[]).map((a) => a.attachment_path)
+  if (paths.length > 0) await supabase.storage.from(ASSIGNMENT_FILES_BUCKET).remove(paths)
+
   const { error } = await supabase.from('classrooms').delete().eq('id', classroomId)
   if (error) throw error
 }
@@ -102,6 +113,8 @@ export interface CreateAssignmentInput {
   description: string
   // Omit or empty = whole classroom.
   recipientIds?: string[]
+  // Optional score for Keyboard Utils (already checked with validateAttachment).
+  attachment?: File | null
 }
 
 export async function createAssignment(input: CreateAssignmentInput): Promise<void> {
@@ -125,6 +138,44 @@ export async function createAssignment(input: CreateAssignmentInput): Promise<vo
       .insert(input.recipientIds.map((studentId) => ({ assignment_id: data.id, student_id: studentId })))
     if (recipientsError) throw recipientsError
   }
+
+  if (input.attachment) {
+    try {
+      await attachToAssignment(data.id as string, input.attachment)
+    } catch (err) {
+      // No half-made assignment: without its file the teacher would have to
+      // find and delete it. Removing it lets them simply try again.
+      await supabase.from('assignments').delete().eq('id', data.id)
+      throw err
+    }
+  }
+}
+
+async function attachToAssignment(assignmentId: string, file: File): Promise<void> {
+  const path = attachmentPath(assignmentId, file.name)
+  const { error: uploadError } = await supabase.storage
+    .from(ASSIGNMENT_FILES_BUCKET)
+    .upload(path, file, { contentType: attachmentContentType(file.name), upsert: true })
+  if (uploadError) throw uploadError
+  const { error } = await supabase
+    .from('assignments')
+    .update({ attachment_path: path, attachment_name: file.name })
+    .eq('id', assignmentId)
+  if (error) {
+    await supabase.storage.from(ASSIGNMENT_FILES_BUCKET).remove([path])
+    throw error
+  }
+}
+
+// A short-lived link that downloads the assignment's file under its original
+// name. Signed, because the bucket is private (see migration 0023).
+export async function fetchAttachmentDownloadUrl(assignment: Pick<Assignment, 'attachment_path' | 'attachment_name'>): Promise<string> {
+  if (!assignment.attachment_path) throw new Error('Úkol nemá přiložený soubor.')
+  const { data, error } = await supabase.storage
+    .from(ASSIGNMENT_FILES_BUCKET)
+    .createSignedUrl(assignment.attachment_path, 60 * 5, { download: assignment.attachment_name ?? true })
+  if (error) throw error
+  return data.signedUrl
 }
 
 export async function fetchClassroomAssignments(classroomId: string): Promise<Assignment[]> {

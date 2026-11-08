@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/AuthProvider'
 import { useQuery } from '../../lib/data/useQuery'
 import { createAssignment, fetchStudentClassroomsForTeacher } from '../../lib/data/classrooms'
 import { getErrorMessage } from '../../lib/errors'
+import { AttachmentField } from './AttachmentField'
 
 interface AssignToStudentModalProps {
   open: boolean
@@ -25,6 +26,7 @@ export function AssignToStudentModal({ open, studentId, studentName, onClose, on
   const [classroomId, setClassroomId] = useState<string>()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [attachment, setAttachment] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -42,9 +44,11 @@ export function AssignToStudentModal({ open, studentId, studentName, onClose, on
         title: title.trim(),
         description,
         recipientIds: [studentId],
+        attachment,
       })
       setTitle('')
       setDescription('')
+      setAttachment(null)
       setClassroomId(undefined)
       onAssigned?.()
       onClose()
@@ -107,6 +111,7 @@ export function AssignToStudentModal({ open, studentId, studentName, onClose, on
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+            <AttachmentField file={attachment} onChange={setAttachment} />
             {error && <p className="text-sm text-coral-dark">{error}</p>}
             <div className="flex gap-2.5">
               <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>

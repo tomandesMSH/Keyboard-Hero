@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { LessonCard } from '../../components/lessons/LessonCard'
+import { AttachmentLink } from '../../components/lessons/AttachmentLink'
 import { AppShell } from '../../components/layout/AppShell'
 import { useAuth } from '../../lib/AuthProvider'
 import { useQuery } from '../../lib/data/useQuery'
@@ -24,6 +25,8 @@ export function Lessons() {
         lessonTitle: assignment.title,
         instructions: assignment.description ?? '',
         assignmentId: assignment.id,
+        attachmentPath: assignment.attachment_path ?? undefined,
+        attachmentName: assignment.attachment_name ?? undefined,
       },
     })
   }
@@ -67,6 +70,7 @@ export function Lessons() {
                   teacherName={assignment.teacher_name}
                   badge={{ label: 'Čeká', tone: 'pending' }}
                   onClick={() => openAssignment(assignment)}
+                  footer={assignment.attachment_path ? <AttachmentLink assignment={assignment} /> : undefined}
                 />
               ))}
             </div>
@@ -85,6 +89,7 @@ export function Lessons() {
                   meta={assignment.description ?? ''}
                   teacherName={assignment.teacher_name}
                   badge={{ label: 'Hotovo', tone: 'success' }}
+                  footer={assignment.attachment_path ? <AttachmentLink assignment={assignment} /> : undefined}
                 />
               ))}
             </div>

@@ -49,6 +49,10 @@ export interface Assignment {
   // Teacher's real name, filled in client-side for students only
   // (fetchStudentAssignments). Never the username.
   teacher_name?: string | null
+  // Optional score (MIDI / MusicXML) for practising in Keyboard Utils: its
+  // storage key and its original file name. Absent until migration 0023.
+  attachment_path?: string | null
+  attachment_name?: string | null
 }
 
 export interface PracticeLog {

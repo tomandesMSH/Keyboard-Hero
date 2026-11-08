@@ -6,6 +6,7 @@ import { Toast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { AppShell } from '../../components/layout/AppShell'
 import { NewAssignmentModal } from '../../components/classrooms/NewAssignmentModal'
+import { AttachmentLink } from '../../components/lessons/AttachmentLink'
 import { useAuth } from '../../lib/AuthProvider'
 import { useQuery } from '../../lib/data/useQuery'
 import {
@@ -131,7 +132,7 @@ function ClassroomDetail({
     }
   }
 
-  async function handleCreateAssignment(input: { title: string; description: string; recipientIds: string[] }) {
+  async function handleCreateAssignment(input: { title: string; description: string; recipientIds: string[]; attachment: File | null }) {
     if (!profile) return
     setAssignmentSubmitting(true)
     setAssignmentError(undefined)
@@ -142,6 +143,7 @@ function ClassroomDetail({
         title: input.title,
         description: input.description,
         recipientIds: input.recipientIds,
+        attachment: input.attachment,
       })
       setAssignmentOpen(false)
       assignments.refetch()
@@ -224,6 +226,11 @@ function ClassroomDetail({
             {assignments.data?.map((assignment) => (
               <div key={assignment.id} className="rounded-2xl bg-bg-card shadow-clay-sm p-3.5">
                 <div className="font-heading font-semibold text-sm">{assignment.title}</div>
+                {assignment.attachment_path && (
+                  <div className="mt-1.5">
+                    <AttachmentLink assignment={assignment} forTeacher />
+                  </div>
+                )}
                 {assignment.description && (
                   <div className="text-text-muted text-xs mt-1">{assignment.description}</div>
                 )}

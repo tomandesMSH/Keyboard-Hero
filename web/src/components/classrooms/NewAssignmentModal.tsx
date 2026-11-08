@@ -3,6 +3,7 @@ import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Avatar } from '../ui/Avatar'
+import { AttachmentField } from './AttachmentField'
 import type { Profile } from '../../lib/data/types'
 
 interface NewAssignmentModalProps {
@@ -11,7 +12,7 @@ interface NewAssignmentModalProps {
   submitting: boolean
   error?: string
   onClose: () => void
-  onSubmit: (input: { title: string; description: string; recipientIds: string[] }) => void
+  onSubmit: (input: { title: string; description: string; recipientIds: string[]; attachment: File | null }) => void
 }
 
 type Target = 'all' | 'selected'
@@ -21,6 +22,7 @@ export function NewAssignmentModal({ open, members, submitting, error, onClose, 
   const [description, setDescription] = useState('')
   const [target, setTarget] = useState<Target>('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [attachment, setAttachment] = useState<File | null>(null)
 
   function toggleSelected(id: string) {
     setSelected((prev) => {
@@ -37,6 +39,7 @@ export function NewAssignmentModal({ open, members, submitting, error, onClose, 
       title,
       description,
       recipientIds: target === 'selected' ? Array.from(selected) : [],
+      attachment,
     })
   }
 
@@ -57,6 +60,7 @@ export function NewAssignmentModal({ open, members, submitting, error, onClose, 
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
+        <AttachmentField file={attachment} onChange={setAttachment} />
         <div>
           <div className="text-xs font-semibold text-text-muted mb-1.5">Komu</div>
           <div className="flex gap-2 mb-2.5">
