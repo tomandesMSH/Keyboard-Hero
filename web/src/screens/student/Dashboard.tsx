@@ -9,6 +9,7 @@ import { DailyReminderBanner } from '../../components/gamification/DailyReminder
 import { Confetti } from '../../components/gamification/Confetti'
 import { Quests } from '../../components/gamification/Quests'
 import { LessonCard } from '../../components/lessons/LessonCard'
+import { AttachmentLink } from '../../components/lessons/AttachmentLink'
 import { AppShell } from '../../components/layout/AppShell'
 import { useAuth } from '../../lib/AuthProvider'
 import { useQuery } from '../../lib/data/useQuery'
@@ -82,6 +83,8 @@ export function StudentDashboard() {
         lessonTitle: assignment.title,
         instructions: assignment.description ?? '',
         assignmentId: assignment.id,
+        attachmentPath: assignment.attachment_path ?? undefined,
+        attachmentName: assignment.attachment_name ?? undefined,
       },
     })
   }
@@ -119,6 +122,7 @@ export function StudentDashboard() {
                   teacherName={assignment.teacher_name}
                   badge={done ? { label: 'Hotovo', tone: 'success' } : { label: 'Čeká', tone: 'pending' }}
                   onClick={() => openAssignment(assignment)}
+                  footer={assignment.attachment_path ? <AttachmentLink assignment={assignment} /> : undefined}
                 />
               )
             })}
