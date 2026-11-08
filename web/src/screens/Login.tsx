@@ -253,6 +253,16 @@ export function Login() {
 
       <div className="fixed right-4 bottom-4 flex items-center gap-2">
         <a
+          href="https://github.com/tomandesMSH/Keyboard-Utils"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 bg-white rounded-lg shadow-clay-sm opacity-90 hover:opacity-100 transition flex items-center justify-center"
+          aria-label="Keyboard Utils"
+          title="Keyboard Utils – aplikace na cvičení klavíru"
+        >
+          <img src="/keyboard-utils-logo.png" alt="Keyboard Utils" className="h-10 w-10 object-contain" />
+        </a>
+        <a
           href="https://www.zusmk.cz/"
           target="_blank"
           rel="noopener noreferrer"
