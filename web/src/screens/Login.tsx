@@ -7,6 +7,7 @@ import { signIn, signUpStudent, signUpTeacher } from '../lib/auth'
 import { applyTheme, getStoredTheme } from '../lib/theme'
 import { needsGuardianConsent } from '../lib/consent'
 import { getErrorMessage } from '../lib/errors'
+import { reportFormUrl } from '../lib/report'
 import { isTeacherAdmin } from '../lib/roles'
 
 type Mode = 'login' | 'register' | 'forgot'
@@ -250,6 +251,17 @@ export function Login() {
           Nový učitelský účet čeká na ruční ověření identity, než bude moci párovat žáky.
         </p>
       )}
+
+      <p className="text-center mt-6">
+        <a
+          href={reportFormUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-text-muted underline hover:text-text-primary"
+        >
+          Něco nefunguje? Nahlásit problém
+        </a>
+      </p>
 
       <div className="fixed right-4 bottom-4 flex items-center gap-2">
         <a

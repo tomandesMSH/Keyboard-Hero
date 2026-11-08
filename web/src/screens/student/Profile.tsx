@@ -15,6 +15,7 @@ import { applyTheme, getStoredTheme } from '../../lib/theme'
 import { useToast } from '../../lib/useToast'
 import { updateShareBasicProgress } from '../../lib/data/profiles'
 import { getErrorMessage } from '../../lib/errors'
+import { reportFormUrl } from '../../lib/report'
 
 export function Profile() {
   const navigate = useNavigate()
@@ -51,6 +52,10 @@ export function Profile() {
   function toggleDarkMode(next: boolean) {
     setDarkMode(next)
     applyTheme(next ? 'dark' : 'light')
+  }
+
+  function openReportForm() {
+    window.open(reportFormUrl({ pupil: true }), '_blank', 'noopener,noreferrer')
   }
 
   function notReady() {
@@ -133,6 +138,7 @@ export function Profile() {
           <SettingsRow label="Tmavý režim" right={<Switch checked={darkMode} onChange={toggleDarkMode} />} />
           <SettingsRow label="Notifikace" onClick={notReady} />
           <SettingsRow label="Moje třídy" onClick={() => setPairingOpen(true)} />
+          <SettingsRow label="Nahlásit problém nebo nápad" onClick={openReportForm} />
         </div>
 
         <div>
