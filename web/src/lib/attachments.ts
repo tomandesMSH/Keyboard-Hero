@@ -14,6 +14,13 @@ export const ATTACHMENT_ACCEPT = ATTACHMENT_EXTENSIONS.join(',')
 export const KEYBOARD_UTILS_URL = 'https://github.com/tomandesMSH/Keyboard-Utils'
 export const KEYBOARD_UTILS_DOWNLOAD_URL = 'https://github.com/tomandesMSH/Keyboard-Utils/releases/latest'
 
+// "Otevřít v Keyboard Utils": a link the app (1.1.0+) registers itself for. It
+// downloads the signed URL (Supabase storage only, valid a few minutes) and
+// opens the score.
+export function keyboardUtilsOpenLink(signedUrl: string, fileName: string): string {
+  return `keyboardutils://open?url=${encodeURIComponent(signedUrl)}&name=${encodeURIComponent(fileName)}`
+}
+
 function extensionOf(name: string): string {
   const dot = name.lastIndexOf('.')
   return dot === -1 ? '' : name.slice(dot).toLowerCase()

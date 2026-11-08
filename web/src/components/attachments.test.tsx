@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { InfoTip } from './ui/InfoTip'
 import { AttachmentField } from './classrooms/AttachmentField'
@@ -89,6 +89,21 @@ describe('AttachmentLink', () => {
       'href',
       'https://github.com/tomandesMSH/Keyboard-Utils/releases/latest',
     )
+  })
+
+  it('opens the file in Keyboard Utils through its own link', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    try {
+      render(<AttachmentLink assignment={{ attachment_path: 'a/oda.mid', attachment_name: 'Óda na radost.mid' }} />)
+      fireEvent.click(screen.getByRole('button', { name: 'Otevřít v Keyboard Utils' }))
+      await waitFor(() => expect(assign).toHaveBeenCalled())
+      expect(assign).toHaveBeenCalledWith(
+        'keyboardutils://open?url=https%3A%2F%2Fexample.test%2Fsigned&name=%C3%93da%20na%20radost.mid',
+      )
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('tells the teacher less - they attached it', () => {

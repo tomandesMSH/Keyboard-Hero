@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { InfoTip } from '../ui/InfoTip'
 import { fetchAttachmentDownloadUrl } from '../../lib/data/classrooms'
-import { KEYBOARD_UTILS_DOWNLOAD_URL } from '../../lib/attachments'
+import { KEYBOARD_UTILS_DOWNLOAD_URL, keyboardUtilsOpenLink } from '../../lib/attachments'
 import { getErrorMessage } from '../../lib/errors'
 import type { Assignment } from '../../lib/data/types'
 
@@ -18,19 +18,25 @@ export function AttachmentLink({ assignment, forTeacher = false }: AttachmentLin
 
   if (!assignment.attachment_path) return null
 
-  async function download() {
+  const fileName = assignment.attachment_name ?? assignment.attachment_path.split('/').pop() ?? 'noty.mid'
+
+  async function go(target: (signedUrl: string) => string, failed: string) {
     setBusy(true)
     setError(undefined)
     try {
-      // A signed link that downloads (Content-Disposition: attachment) - the
-      // page stays where it is.
-      window.location.assign(await fetchAttachmentDownloadUrl(assignment))
+      // Either a signed link that downloads (Content-Disposition: attachment),
+      // or the keyboardutils:// link handing it to the app - the page stays
+      // where it is.
+      window.location.assign(target(await fetchAttachmentDownloadUrl(assignment)))
     } catch (err) {
-      setError(getErrorMessage(err, 'Stažení se nepovedlo.'))
+      setError(getErrorMessage(err, failed))
     } finally {
       setBusy(false)
     }
   }
+
+  const download = () => go((url) => url, 'Stažení se nepovedlo.')
+  const openInApp = () => go((url) => keyboardUtilsOpenLink(url, fileName), 'Otevření se nepovedlo.')
 
   return (
     <div className="text-xs">
@@ -44,6 +50,14 @@ export function AttachmentLink({ assignment, forTeacher = false }: AttachmentLin
           <span aria-hidden="true">🎼</span>
           <span className="truncate">{assignment.attachment_name ?? 'Noty ke stažení'}</span>
         </button>
+        <button
+          type="button"
+          className="shrink-0 rounded-full border border-coral/40 px-2 py-0.5 font-semibold text-coral-dark hover:bg-coral/10 disabled:opacity-50"
+          disabled={busy}
+          onClick={openInApp}
+        >
+          Otevřít v Keyboard Utils
+        </button>
         <InfoTip label="Co s tímhle souborem">
           {forTeacher ? (
             <span className="block">
@@ -52,8 +66,13 @@ export function AttachmentLink({ assignment, forTeacher = false }: AttachmentLin
           ) : (
             <>
               <span className="block mb-1.5">
-                Učitel ti k úkolu přiložil noty skladby. Stáhni si soubor a otevři ho v aplikaci{' '}
-                <b>Keyboard Utils</b> (zdarma pro Windows).
+                Učitel ti k úkolu přiložil noty skladby. Procvičíš je v aplikaci <b>Keyboard Utils</b> (zdarma pro
+                Windows).
+              </span>
+              <span className="block mb-1.5">
+                Máš ji? Tlačítko <b>Otevřít v Keyboard Utils</b> ji spustí rovnou s touhle skladbou (prohlížeč se
+                napoprvé zeptá, jestli ji smí otevřít). Když se nic nestane, stáhni si appku nebo soubor a otevři ho
+                v ní ručně.
               </span>
               <span className="block mb-1.5">
                 Uvidíš skladbu jako padající noty i v notách, můžeš si ji zpomalit, opakovat těžká místa a zkusit si ji
