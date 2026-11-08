@@ -262,6 +262,12 @@ export function Login() {
           Něco nefunguje? Nahlásit problém
         </a>
       </p>
+      <p className="text-center mt-2 text-xs text-text-muted">
+        Vytvořil{' '}
+        <a href="https://tomandes.eu/" target="_blank" rel="noopener" className="underline hover:text-text-primary">
+          tomandesMSH
+        </a>
+      </p>
 
       <div className="fixed right-4 bottom-4 flex items-center gap-2">
         <a
