@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { createAuthStorage } from './rememberMe'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -9,4 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// The session goes to localStorage or sessionStorage by the login screen's
+// "Zapamatuj si mě" box (see rememberMe.ts).
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { storage: createAuthStorage() },
+})

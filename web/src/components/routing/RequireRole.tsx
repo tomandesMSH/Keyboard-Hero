@@ -5,6 +5,7 @@ import type { UserRole } from '../../lib/data/types'
 import { PendingApproval } from '../../screens/student/PendingApproval'
 import { PendingVerification } from '../../screens/teacher/PendingVerification'
 import { BannedScreen } from '../../screens/BannedScreen'
+import { ConnectionProblem } from '../../screens/ConnectionProblem'
 
 export function roleHome(role: UserRole): string {
   switch (role) {
@@ -20,12 +21,12 @@ export function roleHome(role: UserRole): string {
 }
 
 export function RequireRole({ role, children }: { role: UserRole | UserRole[]; children: ReactNode }) {
-  const { session, profile, loading } = useAuth()
+  const { session, profile, loading, profileError } = useAuth()
   const allowedRoles = Array.isArray(role) ? role : [role]
 
   if (loading) return null
   if (!session) return <Navigate to="/login" replace />
-  if (!profile) return <Navigate to="/login" replace />
+  if (!profile) return profileError ? <ConnectionProblem /> : <Navigate to="/login" replace />
   if (profile.is_banned) return <BannedScreen />
   if (!allowedRoles.includes(profile.role)) {
     return <Navigate to={roleHome(profile.role)} replace />

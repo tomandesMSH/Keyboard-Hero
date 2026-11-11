@@ -9,16 +9,19 @@ import { needsGuardianConsent } from '../lib/consent'
 import { getErrorMessage } from '../lib/errors'
 import { reportFormUrl } from '../lib/report'
 import { isTeacherAdmin } from '../lib/roles'
+import { getLastUsername, getRememberMe, saveLastUsername, setRememberMe } from '../lib/rememberMe'
+import { ConnectionProblem } from './ConnectionProblem'
 
 type Mode = 'login' | 'register' | 'forgot'
 type Portal = 'student' | 'teacher'
 
 export function Login() {
   const navigate = useNavigate()
-  const { session, profile, loading: authLoading } = useAuth()
+  const { session, profile, loading: authLoading, profileError } = useAuth()
   const [mode, setMode] = useState<Mode>('login')
   const [portal, setPortal] = useState<Portal>('student')
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState(() => getLastUsername())
+  const [remember, setRemember] = useState(() => getRememberMe())
   const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
@@ -57,7 +60,10 @@ export function Login() {
     setSubmitting(true)
     try {
       if (mode === 'login') {
+        // Before signing in, so the new session goes to the chosen storage.
+        setRememberMe(remember)
         await signIn(username, password)
+        saveLastUsername(username, remember)
         // AuthProvider picks up the new session and the effect above redirects.
       } else if (portal === 'teacher') {
         await signUpTeacher(username, fullName, password)
@@ -73,6 +79,9 @@ export function Login() {
       setSubmitting(false)
     }
   }
+
+  // Logged in, only the profile didn't load: not a reason to ask for the password again.
+  if (session && !profile && profileError) return <ConnectionProblem />
 
   return (
     <div className="max-w-sm md:max-w-md mx-auto p-6 pt-16 relative">
@@ -195,7 +204,13 @@ export function Login() {
           />
         </div>
         {mode === 'login' && (
-          <div className="text-right -mt-2">
+          <div className="flex items-center justify-between gap-3 -mt-2">
+            <label className="flex items-center gap-2 text-xs text-text-muted cursor-pointer">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              <span title="Odškrtni na společném počítači ve škole – po zavření prohlížeče se odhlásíš.">
+                Zapamatuj si mě
+              </span>
+            </label>
             <button
               type="button"
               className="text-xs text-text-muted underline underline-offset-2 hover:text-text-primary"

@@ -5,15 +5,17 @@ import { useAuth } from '../lib/AuthProvider'
 import { signOut } from '../lib/auth'
 import { isTeacherAdmin } from '../lib/roles'
 import { BannedScreen } from './BannedScreen'
+import { ConnectionProblem } from './ConnectionProblem'
 
 // Shown right after every login to an account that is both teacher and admin,
 // so they pick which panel to open instead of always landing in the same one.
 export function ChoosePanel() {
   const navigate = useNavigate()
-  const { session, profile, loading } = useAuth()
+  const { session, profile, loading, profileError } = useAuth()
 
   if (loading) return null
-  if (!session || !profile) return <Navigate to="/login" replace />
+  if (!session) return <Navigate to="/login" replace />
+  if (!profile) return profileError ? <ConnectionProblem /> : <Navigate to="/login" replace />
   if (profile.is_banned) return <BannedScreen />
   if (!isTeacherAdmin(profile)) return <Navigate to={roleHome(profile.role)} replace />
 
